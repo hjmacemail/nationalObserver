@@ -198,6 +198,8 @@ const PUB = path.join(__dirname, 'public');
 const sendPage = name => (req, res) => { res.set('Cache-Control', 'no-store'); res.sendFile(path.join(PUB, name)); };
 
 app.get('/healthz', (req, res) => res.json({ ok: true }));
+app.get('/manifest.webmanifest', (req, res) => { res.type('application/manifest+json').set('Cache-Control', 'public, max-age=3600'); res.sendFile(path.join(PUB, 'manifest.webmanifest')); });
+app.get('/favicon.ico', (req, res) => res.redirect(301, '/assets/icon-192.png'));
 app.use('/assets', express.static(path.join(PUB, 'assets'), { maxAge: '1h' }));
 
 app.get('/login', (req, res, next) => {
@@ -219,7 +221,9 @@ function appHtml() {
 app.get(['/', '/index.html'], requireAuth, (req, res) => {
   const cfg = { user: publicUser(req.user), ai: (({ configured, model, resolvedModel }) => ({ configured, model: model === 'auto' ? resolvedModel : model }))(aiStatus()) };
   const inject = `<script>window.NVO_PLATFORM=${JSON.stringify(cfg).replace(/</g, '\\u003c')};</script>\n`;
-  const html = appHtml();
+  const headLinks = '<link rel="manifest" href="/manifest.webmanifest">\n<link rel="icon" type="image/png" href="/assets/icon-192.png">\n<link rel="apple-touch-icon" href="/assets/apple-touch-icon.png">\n';
+  let html = appHtml();
+  html = html.replace('</head>', headLinks + '</head>');
   const i = html.indexOf('<script>');
   res.set('Cache-Control', 'no-store').type('html').send(html.slice(0, i) + inject + html.slice(i));
 });

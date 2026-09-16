@@ -3,6 +3,13 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="theme-color" content="#0A6B60" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#0A1311" media="(prefers-color-scheme: dark)">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Vitality">
+<meta name="format-detection" content="telephone=no">
 <title>National Vitality Observatory</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -412,6 +419,61 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
 .method-body p{margin:0 0 6px;max-width:65ch}
 .method-body code{font-family:var(--mono);font-size:12px;background:var(--panel2);padding:1px 4px;border-radius:3px;color:var(--ink)}
 @media (prefers-reduced-motion: reduce){.art .heartg,.hexhalo,.country-glow,.site-halo,.org-edge,.halo,.heart-ring,.clock.live .dot{animation:none!important}}
+
+/* ================= MOBILE ================= */
+.ds-toggle,.mbar,.mnav{display:none}
+@media (max-width:760px){
+  html{-webkit-text-size-adjust:100%}
+  body{padding-bottom:calc(64px + env(safe-area-inset-bottom))}
+  .wrap{padding-inline:12px;gap:12px;padding-top:max(10px,env(safe-area-inset-top))}
+  .panel{padding:14px 12px}
+  select,input[type=text],input[type=password],input[type=number]{font-size:16px!important;max-width:100%}
+  .adv-ctl{align-items:stretch}.adv-ctl select{flex:1 1 100%;min-width:0;width:100%}.adv-ctl .btn{flex:1 1 auto;justify-content:center}
+  .btn,.seg button,select{min-height:40px}
+  .tabs button{flex:1;padding:8px 6px}
+  header.top{align-items:stretch;padding-bottom:10px}
+  header.top h1{font-size:25px}
+  .controls{display:grid;grid-template-columns:auto 1fr 1fr auto;gap:6px}
+  .controls .seg{grid-column:1/2}
+  .controls #play{grid-column:2/3}
+  .controls #stepBtn{grid-column:3/4}
+  .controls #speed{grid-column:4/5}
+  .controls #reset{grid-column:1/2}
+  .controls .clock{grid-column:2/5;display:flex;align-items:center;justify-content:center}
+  .acct{grid-column:1/-1;border-inline-start:0;padding:6px 0 0;border-top:1px solid var(--line2);justify-content:flex-end}
+  .acct-u{margin-inline-end:auto}
+  .pipeline{display:none}
+  /* data source: collapsible */
+  .ds-toggle{display:inline-flex;margin-inline-start:auto;min-height:36px;padding:6px 12px;font-size:13px}
+  .datasrc .ds-row:first-child{align-items:center}
+  .datasrc .ds-row:first-child h2{margin-inline-end:auto}
+  .datasrc.ds-closed #onlineBox,.datasrc.ds-closed #realBox,.datasrc.ds-closed .report,.datasrc.ds-closed>.ds-row:last-child,.datasrc.ds-closed .seg,.datasrc.ds-closed #replay{display:none!important}
+  .datasrc.ds-closed .ds-status{flex-basis:100%;font-size:12.5px}
+  .datasrc .drop{flex-direction:column;align-items:stretch}
+  .datasrc .drop .btn,.datasrc .drop select{width:100%;justify-content:center}
+  /* organism: bigger labels on a small screen */
+  #orgSvg{margin-inline:-6px;width:calc(100% + 12px)}
+  .org-lbl{font-size:15px}
+  .org-sub{font-size:11.5px}
+  .org-val{font-size:18px}
+  .chart text{font-size:12px}
+  .chart text.lbl{font-size:12.5px}
+  .shocks .btn{flex:1 1 calc(50% - 6px);justify-content:center}
+  /* sticky mini status bar */
+  .mbar{display:flex;position:fixed;inset-inline:0;top:0;z-index:40;align-items:center;gap:8px;padding:max(8px,env(safe-area-inset-top)) 12px 8px;background:color-mix(in srgb,var(--panel) 92%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-bottom:1px solid var(--line);transform:translateY(-110%);transition:transform .22s ease}
+  .mbar.show{transform:none}
+  .mb-n{font:600 24px/1 var(--mono);color:var(--ink)}
+  .mb-c{font:12px var(--mono);color:var(--ink3);margin-inline-start:auto;white-space:nowrap}
+  .mbar .btn{min-height:36px;padding:6px 14px}
+  /* bottom section nav */
+  .mnav{display:grid;grid-template-columns:repeat(5,1fr);position:fixed;inset-inline:0;bottom:0;z-index:40;background:color-mix(in srgb,var(--panel) 94%,transparent);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);border-top:1px solid var(--line);padding-bottom:env(safe-area-inset-bottom)}
+  .mnav a{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:58px;color:var(--ink3);text-decoration:none;font:500 11px/1.1 var(--body);-webkit-tap-highlight-color:transparent}
+  .mnav a svg{width:22px;height:22px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .mnav a.on{color:var(--accent)}
+  .mnav a.on svg{stroke-width:2.3}
+  section[id],#advisor,#treat,#drillPanel{scroll-margin-top:64px}
+}
+@media (max-width:760px) and (prefers-reduced-motion: reduce){.mbar{transition:none}}
 </style>
 </head>
 <body>
@@ -444,6 +506,7 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
   <section class="panel datasrc" id="datasrc">
     <div class="ds-row">
       <h2 data-i18n="dataSource"></h2>
+      <button class="btn ds-toggle" id="dsToggle" aria-expanded="true" aria-controls="datasrc"></button>
       <div class="seg" role="group" aria-label="Data source">
         <button id="modeOnline" aria-pressed="true" data-i18n="modeOnline"></button><button id="modeReal" aria-pressed="false" data-i18n="modeFiles"></button>
       </div>
@@ -487,7 +550,7 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
     <a href="#vitals" data-jump="#vitals" data-i18n="pipe1"></a><a href="#vitals" data-jump="#vitals" data-i18n="pipe2"></a><a href="#orgSvg" data-jump=".organism" data-i18n="pipe3"></a><a href="#score" data-jump="#score" class="on" data-i18n="pipe4"></a><a href="#diag" data-jump="#diag" data-i18n="pipe5"></a><a href="#drillPanel" data-jump="#drillPanel" data-i18n="pipe6"></a><a href="#advisor" data-jump="#advisor" class="imp-link" data-i18n="pipeImprove"></a><a href="#treat" data-jump="#treat" data-i18n="pipe7"></a><a href="#trend" data-jump="#trend" data-i18n="pipe8"></a>
   </nav>
 
-  <section class="g-top">
+  <section class="g-top" id="secOverview">
     <div class="panel" id="diag"></div>
     <div class="panel organism">
       <div class="panel-head"><div><h2 data-i18n="organism"></h2><p id="orgSub"></p></div>
@@ -506,7 +569,7 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
     <div class="panel" id="score"></div>
   </section>
 
-  <section>
+  <section id="secSystems">
     <div class="panel-head" style="margin-bottom:8px"><h2 data-i18n="vitalsTitle"></h2><p data-i18n="vitalsSub"></p></div>
     <div class="vgrid" id="vitals"></div>
   </section>
@@ -528,7 +591,7 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
 
   <section class="panel" id="advisor" aria-live="polite"></section>
 
-  <section class="g-mid">
+  <section class="g-mid" id="secTrends">
     <div class="panel">
       <div class="panel-head"><h2 data-i18n="ledgerTitle"></h2><p data-i18n="ledgerSub"></p></div>
       <div class="flowhead"><span></span><div class="fh"><span data-i18n="depl"></span><span data-i18n="regenH"></span></div><span style="text-align:end" data-i18n="netStock"></span></div>
@@ -556,6 +619,19 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
     </div>
   </details>
 </div>
+<div class="mbar" id="mbar" aria-hidden="true">
+  <span class="mb-n" id="mbN">—</span><span class="pill" id="mbPill"></span>
+  <span class="mb-c" id="mbClock"></span>
+  <button class="btn primary" id="mbPlay"></button>
+</div>
+<nav class="mnav" id="mnav" aria-label="Sections">
+  <a href="#secOverview" data-sec="secOverview"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg><span data-i18n="mn_overview"></span></a>
+  <a href="#secSystems" data-sec="secSystems"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="4" y="4" width="7" height="7" rx="1.5"/><rect x="13" y="4" width="7" height="7" rx="1.5"/><rect x="4" y="13" width="7" height="7" rx="1.5"/><rect x="13" y="13" width="7" height="7" rx="1.5"/></svg><span data-i18n="mn_systems"></span></a>
+  <a href="#advisor" data-sec="advisor"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 19 19 5M13 5h6v6"/></svg><span data-i18n="mn_improve"></span></a>
+  <a href="#treat" data-sec="treat"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 4v16M4 12h16"/></svg><span data-i18n="mn_treat"></span></a>
+  <a href="#secTrends" data-sec="secTrends"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/></svg><span data-i18n="mn_trends"></span></a>
+</nav>
+
 <script>
 (()=>{
 /* ================= BILINGUAL MODEL CONTENT ================= */
@@ -968,6 +1044,7 @@ const I={en:{
  adv_improved:'Countries that improved',adv_improvedSub:'Peers that were near your current level about 10 years earlier and gained the most since.',adv_learn:'Most relevant to learn from',adv_none:'No comparable improvers in this group.',adv_loose:'Few peers started at your level; showing the biggest improvers in the group.',
  adv_todo:'What to do',adv_playbook:'Proven levers',adv_sim:'Simulate',adv_simOn:'In treatment plan',adv_horizon:'Results in {h}',
  plat_aiNote:'Sends this system’s scores, KPIs, peer comparison and the simulator’s intervention list to Anthropic through this platform, using the organisation’s API key. Nothing is sent until you press Generate.',plat_aiOn:'AI is enabled — the API key is managed in platform settings.',plat_aiOff:'AI is not set up yet. Ask an administrator to add the Anthropic API key in Settings, or use Copy prompt.',plat_aiOffAdmin:'No Anthropic API key saved yet.',plat_openSettings:'Open settings',plat_settings:'Settings',plat_logout:'Sign out',plat_admin:'admin',plat_signedIn:'Signed in as',
+mn_overview:'Overview',mn_systems:'Systems',mn_improve:'Improve',mn_treat:'Treat',mn_trends:'Trends',ds_show:'Change',ds_hide:'Hide',
 adv_ai:'Tailored plan with AI (Claude)',adv_aiNote:'Sends this system’s scores, KPIs, peer comparison and the simulator’s intervention list to Anthropic using your own API key. Nothing is sent until you press Generate. Without a key, copy the prompt into any AI assistant.',
  adv_aiSettings:'API key',adv_key:'Anthropic API key',adv_remember:'Remember on this computer',adv_ask:'Generate tailored plan',adv_copy:'Copy prompt',adv_copied:'Prompt copied — paste it into any AI assistant.',adv_dl:'Download brief',
  adv_thinking:'Asking {model}…',adv_aiErr:'AI request failed: {err}',adv_noKey:'Add an Anthropic API key, or use Copy prompt with any AI assistant.',adv_diag:'Diagnosis',adv_actions:'First steps',adv_evidence:'Evidence',adv_risks:'Risks',adv_cost:'Cost',adv_watch:'Leading indicators to watch',adv_caveat:'AI-generated — verify country examples and figures before use.',
@@ -1060,6 +1137,7 @@ modeSynth:'Synthetic',modeReal:'Real data',
  adv_improved:'دول تحسّنت',adv_improvedSub:'دول نظيرة كانت قرب مستواك الحالي قبل نحو 10 سنوات وحققت أكبر تقدم منذ ذلك الحين.',adv_learn:'الأجدر بالتعلّم منها',adv_none:'لا توجد دول متحسّنة مماثلة في هذه المجموعة.',adv_loose:'قلة من الدول بدأت من مستواك؛ تُعرض الدول الأكثر تحسنًا في المجموعة.',
  adv_todo:'ما العمل',adv_playbook:'روافع مجرّبة',adv_sim:'محاكاة',adv_simOn:'ضمن خطة العلاج',adv_horizon:'النتائج خلال {h}',
  plat_aiNote:'يرسل درجات هذا النظام ومؤشراته والمقارنة مع النظراء وقائمة تدخلات المحاكي إلى Anthropic عبر هذه المنصة باستخدام مفتاح المؤسسة. لا يُرسل شيء حتى تضغط «إنشاء».',plat_aiOn:'الذكاء الاصطناعي مفعّل — يُدار المفتاح من إعدادات المنصة.',plat_aiOff:'لم يُفعَّل الذكاء الاصطناعي بعد. اطلب من المسؤول إضافة مفتاح Anthropic في الإعدادات، أو استخدم «نسخ النص».',plat_aiOffAdmin:'لم يُحفظ مفتاح Anthropic بعد.',plat_openSettings:'فتح الإعدادات',plat_settings:'الإعدادات',plat_logout:'تسجيل الخروج',plat_admin:'مسؤول',plat_signedIn:'مسجّل الدخول باسم',
+mn_overview:'نظرة عامة',mn_systems:'الأنظمة',mn_improve:'التحسين',mn_treat:'العلاج',mn_trends:'الاتجاهات',ds_show:'تغيير',ds_hide:'إخفاء',
 adv_ai:'خطة مخصصة بالذكاء الاصطناعي (Claude)',adv_aiNote:'يرسل درجات هذا النظام ومؤشراته والمقارنة مع النظراء وقائمة تدخلات المحاكي إلى Anthropic باستخدام مفتاحك الخاص. لا يُرسل شيء حتى تضغط «إنشاء». بدون مفتاح، انسخ النص إلى أي مساعد ذكاء اصطناعي.',
  adv_aiSettings:'مفتاح الواجهة البرمجية',adv_key:'مفتاح Anthropic API',adv_remember:'تذكّر على هذا الجهاز',adv_ask:'إنشاء خطة مخصصة',adv_copy:'نسخ النص',adv_copied:'تم نسخ النص — ألصقه في أي مساعد ذكاء اصطناعي.',adv_dl:'تنزيل الملخص',
  adv_thinking:'جارٍ سؤال {model}…',adv_aiErr:'فشل طلب الذكاء الاصطناعي: {err}',adv_noKey:'أضف مفتاح Anthropic API، أو استخدم «نسخ النص» مع أي مساعد ذكاء اصطناعي.',adv_diag:'التشخيص',adv_actions:'الخطوات الأولى',adv_evidence:'الشواهد',adv_risks:'المخاطر',adv_cost:'الكلفة',adv_watch:'مؤشرات قيادية للمتابعة',adv_caveat:'مولَّد بالذكاء الاصطناعي — تحقّق من أمثلة الدول والأرقام قبل الاستخدام.',
@@ -1841,7 +1919,8 @@ function renderLedger(){
 function renderTrend(){
   const s=S,N=60,all=s.series.nvi.length,off=Math.max(0,all-N);
   const nvi=s.series.nvi.slice(off),comp=s.series.comp.slice(off),gdp=s.series.gdp.slice(off),proj=s.an.proj.map(p=>p.nvi);
-  const W=640,H=250,l=30,r=40,tp=14,b=26,tot=nvi.length+proj.length-1||1;
+  const narrow=($('#trend')?.clientWidth||640)<520;
+  const W=narrow?380:640,H=narrow?260:250,l=30,r=40,tp=14,b=26,tot=nvi.length+proj.length-1||1;
   const X=i=>l+(W-l-r)*i/tot,Y=v=>tp+(H-tp-b)*(1-v/100),G=v=>tp+(H-tp-b)*(1-(clamp(v,-6,8)+6)/14);
   let g='';
   [0,25,50,75,100].forEach(v=>{g+=`<line x1="${l}" x2="${W-r}" y1="${Y(v)}" y2="${Y(v)}" stroke="var(--line2)"/><text x="${l-6}" y="${Y(v)+3.5}" text-anchor="end">${v}</text>`});
@@ -1872,6 +1951,7 @@ function renderAll(){
   renderHeader();renderDataPanel();renderDiag();renderOrganism();renderScore();renderVitals();renderDrill();updateTreat();renderLedger();renderTrend();
   const aKey=advKey()+'|'+lang;const as=[aKey,JSON.stringify(ADV.ai[aKey]||{}).length,ADV.busy,ADV.msg,ADV.cache[advKey()]?.when,Object.keys(S.iv).join(),inObserved(),S.cur.vit[sel.vital]!=null?Math.round(S.cur.vit[sel.vital]):''].join('~');
   if(as!==advSig){advSig=as;renderAdvisor()}
+  renderMobile();
 }
 
 /* ================= ORGANISM RING — COUNTRY AT THE CORE ================= */
@@ -2372,6 +2452,47 @@ document.addEventListener('click',e=>{
   const j=e.target.closest('[data-jump]');if(j){e.preventDefault();const el=document.querySelector(j.dataset.jump);if(el){el.scrollIntoView({behavior:'smooth',block:'start'});if(j.dataset.jump==='#advisor')goImprove(sel.vital)}}
 });
 
+/* ================= MOBILE — mini status bar, bottom nav, collapsible data source, responsive chart ================= */
+const MQ=window.matchMedia('(max-width:760px)');
+let dsOpen=!MQ.matches;
+function renderDsToggle(){
+  const box=$('#datasrc'),b=$('#dsToggle');if(!box||!b)return;
+  const closed=MQ.matches&&!dsOpen;box.classList.toggle('ds-closed',closed);
+  b.textContent=closed?t('ds_show'):t('ds_hide');b.setAttribute('aria-expanded',String(!closed));
+}
+$('#dsToggle')?.addEventListener('click',()=>{dsOpen=!dsOpen;renderDsToggle()});
+function renderMobile(){
+  if(!S?.cur||!S.an)return;
+  const n=$('#mbN'),pill=$('#mbPill');if(!n)return;
+  n.textContent=Math.round(S.cur.nvi);
+  pill.className='pill s-'+S.an.cond.cls;pill.textContent=t('cond_'+S.an.cond.code);
+  $('#mbClock').textContent=$('#clockTxt')?.textContent||'';
+  $('#mbPlay').textContent=timer?t('pause'):t('run');
+  renderDsToggle();
+}
+$('#mbPlay')?.addEventListener('click',()=>$('#play').click());
+// show the mini bar once the page header has scrolled away
+if('IntersectionObserver' in window){
+  const hdr=document.querySelector('header.top');
+  new IntersectionObserver(([e])=>{const on=!e.isIntersecting&&e.boundingClientRect.top<0;$('#mbar').classList.toggle('show',on);$('#mbar').setAttribute('aria-hidden',String(!on))}).observe(hdr);
+  // highlight the section currently on screen
+  const secs=[...document.querySelectorAll('.mnav a')].map(a=>document.getElementById(a.dataset.sec)).filter(Boolean);
+  const vis=new Map();
+  const io=new IntersectionObserver(es=>{es.forEach(e=>vis.set(e.target.id,e.isIntersecting?e.intersectionRect.height:0));
+    let best=null,bv=0;secs.forEach(s=>{const v=vis.get(s.id)||0;if(v>bv){bv=v;best=s.id}});
+    if(best)document.querySelectorAll('.mnav a').forEach(a=>a.classList.toggle('on',a.dataset.sec===best));
+  },{threshold:[0,.05,.1,.2,.3,.4,.5,.6,.7,.8,.9,1],rootMargin:'-60px 0px -70px 0px'});
+  secs.forEach(s=>io.observe(s));
+}
+document.querySelector('.mnav')?.addEventListener('click',e=>{
+  const a=e.target.closest('a[data-sec]');if(!a)return;e.preventDefault();
+  const el=document.getElementById(a.dataset.sec);if(el)el.scrollIntoView({behavior:matchMedia('(prefers-reduced-motion: reduce)').matches?'auto':'smooth',block:'start'});
+});
+// re-render layout-dependent pieces when crossing the breakpoint or rotating
+let rsT=null,lastW=0;
+window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{const w=$('#trend')?.clientWidth||0;if(Math.abs(w-lastW)>40&&S?.cur){lastW=w;renderTrend()}renderDsToggle()},150)});
+MQ.addEventListener?.('change',()=>{dsOpen=!MQ.matches;renderDsToggle()});
+
 /* ================= WIRING ================= */
 let timer=null,lastLoad=null,lastOnline=null,lastFiles=null,srcMode='online',onlineMsg='',wbBusy=false,wbToken=0;
 let wbPick='JOR';try{const v=localStorage.getItem('nvo.wbCountry');if(v&&GEO[v])wbPick=v}catch(e){}
@@ -2410,7 +2531,7 @@ function loadReal(files,src,geo){
 function setPlaying(on){
   clearInterval(timer);timer=null;
   if(on)timer=setInterval(tick,+$('#speed').value);
-  $('#play').textContent=on?t('pause'):t('run');$('#clock').classList.toggle('live',on);
+  $('#play').textContent=on?t('pause'):t('run');$('#clock').classList.toggle('live',on);if($('#mbPlay'))$('#mbPlay').textContent=$('#play').textContent;
 }
 function tick(){step(S,true,true);renderAll()}
 function setMode(mode){

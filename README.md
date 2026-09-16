@@ -20,6 +20,23 @@ The observatory (Nation + Government tabs, organism views, stress tests, Improve
   - Per-user AI rate limit (30 requests per hour by default).
 - The standalone `app/nvo.html` still works on its own. In that mode, the key is entered in the browser as before.
 
+## Using it on a phone
+
+The whole platform is mobile-friendly: login, settings and the observatory itself. On screens narrower than 760 px:
+
+- **Bottom navigation** jumps between Overview, Systems, Improve, Treat and Trends.
+- **Status bar:** once you scroll past the header, a compact bar stays at the top with the vitality score, the condition, the date and Run/Pause.
+- **Data source** collapses to a one-line status. Tap **Change** to open it.
+- **Readability:** organism labels are larger, the trend chart is redrawn for a narrow width, and inputs are 16 px so iPhone doesn't zoom when you tap a field.
+- **Settings:** the users table becomes cards.
+
+**Install as an app:** open your Railway URL on the phone, sign in, then:
+
+- **iPhone (Safari):** Share → *Add to Home Screen*.
+- **Android (Chrome):** ⋮ → *Install app* (or *Add to Home screen*).
+
+It opens full-screen with its own icon. It still needs an internet connection for sign-in, World Bank data and AI.
+
 ## Deploy on Railway
 
 1. **Put this folder in a GitHub repo** (Railway deploys from GitHub):
@@ -75,7 +92,7 @@ The platform serves `app/nvo.html`. Replace that file with a newer build and red
 server.js          Express server: auth, users, settings, AI proxy, serves the app
 lib/security.js    scrypt hashing, signed tokens, AES-GCM, login throttle
 lib/store.js       JSON file store (atomic writes)
-public/            login, setup, settings pages (+ assets/)
+public/            login, setup, settings pages, manifest.webmanifest (+ assets/, app icons)
 app/nvo.html       the observatory
 Dockerfile, railway.json, .env.example
 ```
