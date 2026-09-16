@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>National Vitality Observatory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2213%22 fill=%22%230A6B60%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%225%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/ui.css">
+<script src="/assets/common.js"></script>
+</head>
+<body>
+<span hidden data-title="settings"></span>
+<div class="shell">
+  <header class="topbar">
+    <div><div class="eyebrow" data-t="brand"></div><h1 data-t="settings"></h1><div class="whoami" id="who"></div></div>
+    <div class="right">
+      <div class="seg" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ar" lang="ar">عربي</button></div>
+      <a class="btn" href="/" id="backBtn" data-t="back"></a>
+      <form method="post" action="/logout"><button class="btn" type="submit" data-t="signOut"></button></form>
+    </div>
+  </header>
+
+  <section class="card hidden" id="ai" aria-labelledby="aiH">
+    <div class="card-h"><div><h2 id="aiH" data-t="ai"></h2><p data-t="aiSub"></p></div></div>
+    <div class="status" id="aiStatus"><span class="dot"></span><b id="aiStatusTxt"></b><span class="meta" id="aiMeta"></span></div>
+    <div id="aiMsg" class="msg" role="status" hidden></div>
+    <form id="aiForm" novalidate>
+      <label class="field"><span data-t="apiKey"></span>
+        <div class="keyrow"><input type="password" id="apiKey" class="mono" autocomplete="off" spellcheck="false" data-t-ph="keyPh"><button type="button" class="btn" id="toggleKey" data-t="show"></button></div>
+        <small class="muted" data-t="keyHelp"></small></label>
+      <label class="field"><span data-t="model"></span><select id="model"><option value="auto" data-t="modelAuto"></option></select><small class="muted" data-t="modelHelp"></small></label>
+      <div class="row">
+        <button type="submit" class="btn primary" id="aiSave" data-t="save"></button>
+        <button type="button" class="btn" id="aiTest" data-t="test"></button>
+        <button type="button" class="btn danger" id="aiRemove" data-t="removeKey"></button>
+      </div>
+    </form>
+  </section>
+
+  <section class="card hidden" id="users" aria-labelledby="usersH">
+    <div class="card-h"><div><h2 id="usersH" data-t="users"></h2><p data-t="usersSub"></p></div></div>
+    <div id="usersMsg" class="msg" role="status" hidden></div>
+    <div class="tablewrap"><table class="users"><thead><tr><th data-t="username"></th><th data-t="role"></th><th data-t="lastLogin"></th><th></th></tr></thead><tbody id="userRows"></tbody></table></div>
+    <details class="add"><summary data-t="addUser"></summary>
+      <form id="addForm" novalidate>
+        <div class="grid2">
+          <label class="field"><span data-t="username"></span><input type="text" id="nuName" autocomplete="off" autocapitalize="none" spellcheck="false"></label>
+          <label class="field"><span data-t="role"></span><select id="nuRole"><option value="viewer" data-t="viewer"></option><option value="admin" data-t="admin"></option></select></label>
+          <label class="field"><span data-t="password"></span><input type="password" id="nuPw" autocomplete="new-password"><small class="muted" data-t="pwRule"></small></label>
+        </div>
+        <button type="submit" class="btn primary" data-t="add"></button>
+      </form>
+    </details>
+  </section>
+
+  <section class="card" id="account" aria-labelledby="accH">
+    <div class="card-h"><div><h2 id="accH" data-t="account"></h2><p data-t="accountSub"></p></div></div>
+    <p class="msg info hidden" id="viewerNote" data-t="viewerNote"></p>
+    <div id="pwMsg" class="msg" role="status" hidden></div>
+    <form id="pwForm" novalidate>
+      <div class="grid2">
+        <label class="field"><span data-t="current"></span><input type="password" id="curPw" autocomplete="current-password"></label>
+        <span></span>
+        <label class="field"><span data-t="newPw"></span><input type="password" id="newPw" autocomplete="new-password"><small class="muted" data-t="pwRule"></small></label>
+        <label class="field"><span data-t="confirm"></span><input type="password" id="newPw2" autocomplete="new-password"></label>
+      </div>
+      <button type="submit" class="btn primary" data-t="changePw"></button>
+    </form>
+  </section>
+</div>
+<script src="/assets/settings.js"></script>
+</body>
+</html>

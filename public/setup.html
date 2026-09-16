@@ -1,0 +1,42 @@
+<!doctype html>
+<html lang="en" dir="ltr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="robots" content="noindex">
+<title>National Vitality Observatory</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%2213%22 fill=%22%230A6B60%22/%3E%3Ccircle cx=%2216%22 cy=%2216%22 r=%225%22 fill=%22%23fff%22/%3E%3C/svg%3E">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans+Condensed:wght@600;700&family=IBM+Plex+Sans:wght@400;500;600&family=IBM+Plex+Sans+Arabic:wght@400;500;600;700&display=swap">
+<link rel="stylesheet" href="/assets/ui.css">
+<script src="/assets/common.js"></script>
+</head>
+<body>
+<span hidden data-title="setupTitle"></span>
+<div class="auth">
+  <aside class="auth-art">
+    <div><div class="eyebrow" data-t="brand"></div><h1 data-t="artTitle"></h1></div>
+    <svg viewBox="0 0 400 400" aria-hidden="true"><g fill="none" stroke="var(--line)" stroke-width="1.5"><circle cx="200" cy="200" r="150"/><circle cx="200" cy="200" r="96" stroke-dasharray="3 6"/></g>
+<g stroke="var(--accent)" stroke-opacity=".35" stroke-width="1.5"><line x1="200" y1="200" x2="200" y2="50"/><line x1="200" y1="200" x2="342.7" y2="153.6"/><line x1="200" y1="200" x2="288.2" y2="321.4"/><line x1="200" y1="200" x2="111.8" y2="321.4"/><line x1="200" y1="200" x2="57.3" y2="153.6"/></g>
+<circle cx="200" cy="200" r="46" fill="var(--accent-soft)" stroke="var(--accent)" stroke-width="2"/><text x="200" y="208" text-anchor="middle" font-family="IBM Plex Mono,monospace" font-size="24" font-weight="600" fill="var(--accent)">72</text>
+<g stroke="var(--panel)" stroke-width="3"><circle cx="200" cy="50" r="17" fill="var(--good)"/><circle cx="342.7" cy="153.6" r="17" fill="var(--good)"/><circle cx="288.2" cy="321.4" r="17" fill="var(--warn)"/><circle cx="111.8" cy="321.4" r="17" fill="var(--crit)"/><circle cx="57.3" cy="153.6" r="17" fill="var(--good)"/></g></svg>
+    <p data-t="artText"></p>
+  </aside>
+  <main class="auth-main">
+    <div class="auth-top"><div class="seg" role="group" aria-label="Language"><button type="button" data-lang="en">EN</button><button type="button" data-lang="ar" lang="ar">عربي</button></div></div>
+    <div class="auth-card">
+      <h2 data-t="setupTitle"></h2>
+      <p class="lead" data-t="setupLead"></p>
+      <div id="msg" class="msg" role="alert" hidden></div>
+      <form id="f" novalidate>
+        <label class="field"><span data-t="setupCode"></span><input type="text" id="code" class="code" autocomplete="one-time-code" autocapitalize="characters" spellcheck="false" maxlength="8" required></label>
+        <label class="field"><span data-t="username"></span><input type="text" id="username" autocomplete="username" autocapitalize="none" spellcheck="false" required></label>
+        <label class="field"><span data-t="password"></span><input type="password" id="password" autocomplete="new-password" required><small class="muted" data-t="pwRule"></small></label>
+        <label class="field"><span data-t="confirm"></span><input type="password" id="password2" autocomplete="new-password" required></label>
+        <button class="btn primary" id="go" type="submit" data-t="createAdmin"></button>
+      </form>
+    </div>
+  </main>
+</div>
+<script src="/assets/setup.js"></script>
+</body>
+</html>
