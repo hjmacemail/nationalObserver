@@ -474,6 +474,34 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
   section[id],#advisor,#treat,#drillPanel{scroll-margin-top:64px}
 }
 @media (max-width:760px) and (prefers-reduced-motion: reduce){.mbar{transition:none}}
+
+/* ================= REPORT EXPORT DIALOG ================= */
+.btn-export{display:inline-flex;align-items:center;gap:6px}
+.btn-export svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.8;stroke-linejoin:round;stroke-linecap:round}
+.rep-dlg{border:1px solid var(--line);border-radius:10px;padding:0;background:var(--panel);color:var(--ink);width:min(560px,calc(100vw - 24px));max-height:calc(100vh - 24px);box-shadow:0 20px 60px rgba(0,0,0,.25)}
+.rep-dlg::backdrop{background:rgba(10,19,17,.45)}
+.rep-dlg form{padding:20px 22px;display:flex;flex-direction:column;gap:12px}
+.rep-dlg h2{margin:0;font-family:var(--display);font-size:22px}
+.rep-sub{margin:0;color:var(--ink2);font-size:13.5px}
+.rep-dlg fieldset{border:0;margin:0;padding:0;display:flex;flex-direction:column;gap:8px}
+.rep-dlg legend{margin-bottom:6px}
+.rep-two{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.rep-opt{display:flex;gap:10px;align-items:flex-start;padding:10px 12px;border:1px solid var(--line);border-radius:8px;cursor:pointer;background:var(--panel)}
+.rep-opt:has(input:checked){border-color:var(--accent);background:var(--accent-soft)}
+.rep-opt input{margin-top:3px;accent-color:var(--accent)}
+.rep-opt b{display:block;font-size:14px}
+.rep-opt small{display:block;color:var(--ink2);font-size:12.5px;line-height:1.4;margin-top:2px}
+.rep-lang{display:flex;align-items:center;gap:10px}
+.rep-msg{font-size:13px;color:var(--ink2);min-height:18px}
+.rep-msg.ok{color:var(--good)}.rep-msg.err{color:var(--crit)}
+.rep-act{display:flex;justify-content:flex-end;gap:8px}
+@media (max-width:760px){
+  .controls #exportReport{grid-column:1/-1;justify-content:center}
+  .rep-dlg{width:100vw;max-width:100vw;max-height:92vh;margin:auto 0 0;border-radius:14px 14px 0 0;border-bottom:0}
+  .rep-dlg form{padding:18px 14px calc(18px + env(safe-area-inset-bottom))}
+  .rep-two{grid-template-columns:1fr}
+  .rep-act .btn{flex:1;justify-content:center}
+}
 </style>
 </head>
 <body>
@@ -498,6 +526,7 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
       <button class="btn" id="stepBtn" data-i18n="step"></button>
       <select id="speed" aria-label="Speed"><option value="900">1×</option><option value="450" selected>2×</option><option value="180">5×</option></select>
       <button class="btn" id="reset" data-i18n="reset"></button>
+      <button class="btn btn-export" id="exportReport"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 3h7l5 5v13H7z"/><path d="M14 3v5h5M10 13h6M10 17h6"/></svg><span data-i18n="rep_btn"></span></button>
       <div class="clock" id="clock"><span class="dot"></span><span id="clockTxt">—</span></div>
       <div class="acct" id="acct" hidden></div>
     </div>
@@ -619,6 +648,26 @@ details.method summary{cursor:pointer;font-family:var(--display);font-weight:600
     </div>
   </details>
 </div>
+
+<dialog id="repDlg" class="rep-dlg" aria-labelledby="repH">
+  <form id="repForm">
+    <h2 id="repH" data-i18n="rep_dlgTitle"></h2>
+    <p class="rep-sub" id="repSub"></p>
+    <fieldset><legend class="eyebrow" data-i18n="rep_kind"></legend>
+      <label class="rep-opt"><input type="radio" name="kind" value="summary" checked><span><b data-i18n="rep_summary"></b><small data-i18n="rep_summaryD"></small></span></label>
+      <label class="rep-opt"><input type="radio" name="kind" value="detailed"><span><b data-i18n="rep_detailed"></b><small data-i18n="rep_detailedD"></small></span></label>
+    </fieldset>
+    <fieldset><legend class="eyebrow" data-i18n="rep_format"></legend>
+      <div class="rep-two">
+        <label class="rep-opt"><input type="radio" name="fmt" value="pdf" checked><span><b>PDF</b><small data-i18n="rep_pdfD"></small></span></label>
+        <label class="rep-opt"><input type="radio" name="fmt" value="docx"><span><b data-i18n="rep_docx"></b><small data-i18n="rep_docxD"></small></span></label>
+      </div>
+    </fieldset>
+    <div class="rep-lang"><label class="eyebrow" for="repLang" data-i18n="rep_lang"></label><select id="repLang"><option value="en">English</option><option value="ar" lang="ar">العربية</option></select></div>
+    <div class="rep-msg" id="repMsg" role="status" aria-live="polite"></div>
+    <div class="rep-act"><button type="button" class="btn" id="repCancel" data-i18n="rep_cancel"></button><button type="submit" class="btn primary" id="repGo" data-i18n="rep_go"></button></div>
+  </form>
+</dialog>
 <div class="mbar" id="mbar" aria-hidden="true">
   <span class="mb-n" id="mbN">—</span><span class="pill" id="mbPill"></span>
   <span class="mb-c" id="mbClock"></span>
@@ -1045,6 +1094,33 @@ const I={en:{
  adv_todo:'What to do',adv_playbook:'Proven levers',adv_sim:'Simulate',adv_simOn:'In treatment plan',adv_horizon:'Results in {h}',
  plat_aiNote:'Sends this system’s scores, KPIs, peer comparison and the simulator’s intervention list to Anthropic through this platform, using the organisation’s API key. Nothing is sent until you press Generate.',plat_aiOn:'AI is enabled — the API key is managed in platform settings.',plat_aiOff:'AI is not set up yet. Ask an administrator to add the Anthropic API key in Settings, or use Copy prompt.',plat_aiOffAdmin:'No Anthropic API key saved yet.',plat_openSettings:'Open settings',plat_settings:'Settings',plat_logout:'Sign out',plat_admin:'admin',plat_signedIn:'Signed in as',
 mn_overview:'Overview',mn_systems:'Systems',mn_improve:'Improve',mn_treat:'Treat',mn_trends:'Trends',ds_show:'Change',ds_hide:'Hide',
+rep_btn:'Export report',rep_dlgTitle:'Export a status report',rep_dlgSub:'A snapshot of the current month in the {tab} tab, with the organism, charts, diagnosis and recommendations.',
+rep_kind:'Report',rep_summary:'One-page summary',rep_summaryD:'Headline scores, the organism, vital signs, diagnosis, early warnings, priority actions and the trend, on a single page.',
+rep_detailed:'Detailed report',rep_detailedD:'Everything in the summary, plus both organism views, resilience properties, every system with its KPIs, the regeneration ledger, stress tests, interventions, improvement options and method.',
+rep_format:'Format',rep_pdfD:'Fixed layout, ready to share or print.',rep_docx:'Word (.docx)',rep_docxD:'Editable in Word, Pages, LibreOffice or Google Docs.',rep_lang:'Language',
+rep_go:'Create report',rep_cancel:'Close',rep_prep:'Drawing the organism and charts…',rep_building:'Building the {fmt} file…',rep_done:'Saved {name}.',rep_err:'Could not create the report: {err}',
+rep_titleNation:'National vitality status report',rep_titleGov:'Government vitality status report',rep_meta:'Status for {month} · Data: {src} · Generated {date}',
+rep_srcSynth:'synthetic demonstration data (not real)',rep_srcWB:'World Bank open data, observed {from} – {to}',rep_srcFiles:'data files, observed {from} – {to}',rep_simAfter:'{n} simulated months after the last observation',
+rep_tileNvi:'Vitality index',rep_tileDir:'Direction, 6 months',rep_tileAvg:'Conventional average',
+rep_orgCap:'Each organ stands for one system. The ring around it shows the system’s health from 0 to 100 (green ≥ 65, amber 40–64, red < 40); the centre shows the overall index.',
+rep_orgRing:'Ring view',rep_orgBody:'Human-body view',
+rep_vitalsCap:'Health of each system, weakest first. Dashed lines mark the strained (40) and healthy (65) thresholds; the figure on the right is the change over 6 months.',
+rep_warnings:'Early warnings',rep_noWarn:'No early warnings this month.',rep_actions:'Priority actions',
+rep_trendCap:'Index over the last five years with a 12-month projection (shaded). Dashed grey: conventional average; amber: {head}.',
+rep_exec:'Executive summary',rep_facts:'Key facts',rep_propsCap:'The five properties of a living system. Solid shape: now; dashed: 12 months ago.',
+rep_colProp:'Property',rep_colNow:'Now',rep_col12:'12 months ago',rep_colSystem:'System',rep_colOrgan:'Organ',rep_colScore:'Score',rep_colStatus:'Status',rep_colChange:'6-mo change',rep_colWarn:'Early warning',rep_yes:'Yes',
+rep_systems:'Systems in detail',rep_systemsSub:'Systems are listed from weakest to strongest. Each table shows the KPIs that feed the system score, with their weight.',
+rep_histCap:'System score over the last 36 months (bands: red < 40, amber 40–64, green ≥ 65).',
+rep_colKpi:'KPI',rep_colValue:'Latest value',rep_colTarget:'Target',rep_colHealth:'Health',rep_colTrend:'6-mo trend',rep_colRole:'Role',rep_colWeight:'Weight',
+rep_ledgerCap:'Net monthly flow into each asset (regeneration minus depletion) and the change in its stock over 12 months.',rep_colAsset:'Asset',rep_colNet:'Net flow / month',rep_colStock:'Stock change, 12 mo',rep_depleting:'Depleting',rep_regenerating:'Regenerating',
+rep_events:'Case log (latest entries)',rep_colMonth:'Month',rep_colEvent:'Event',
+rep_stress:'Stress test and interventions',rep_noStress:'No stress test has been run in this session.',rep_activeShocks:'Shocks still active',
+rep_iv:'Active interventions',rep_noIv:'No interventions are switched on.',rep_colIv:'Intervention',rep_colCost:'Cost',rep_colStart:'Started',rep_colRamp:'Effect reached',
+rep_improve:'How to improve',rep_improveSub:'Options for the priority systems. Peer comparisons and AI plans are included when they were loaded or generated in the advisor before exporting.',
+rep_levers:'Proven levers',rep_bench:'Peer comparison: {group}',rep_colYou:'This country',rep_colMedian:'Peer median',rep_colTop:'Top quarter',rep_colImprovers:'Countries that improved',rep_ai:'AI-tailored plan ({model})',
+rep_method:'Method and sources',rep_dataLine:'Data: {src}.',
+rep_disclaimer:'Generated by the National Vitality Observatory simulation. Scores are model estimates built from the indicators listed, not official statistics; projections and stress tests are scenarios, not forecasts.',
+rep_page:'Page {n} of {m}',rep_proj:'Projected index in 12 months',rep_mechanism:'Mechanism',
 adv_ai:'Tailored plan with AI (Claude)',adv_aiNote:'Sends this system’s scores, KPIs, peer comparison and the simulator’s intervention list to Anthropic using your own API key. Nothing is sent until you press Generate. Without a key, copy the prompt into any AI assistant.',
  adv_aiSettings:'API key',adv_key:'Anthropic API key',adv_remember:'Remember on this computer',adv_ask:'Generate tailored plan',adv_copy:'Copy prompt',adv_copied:'Prompt copied — paste it into any AI assistant.',adv_dl:'Download brief',
  adv_thinking:'Asking {model}…',adv_aiErr:'AI request failed: {err}',adv_noKey:'Add an Anthropic API key, or use Copy prompt with any AI assistant.',adv_diag:'Diagnosis',adv_actions:'First steps',adv_evidence:'Evidence',adv_risks:'Risks',adv_cost:'Cost',adv_watch:'Leading indicators to watch',adv_caveat:'AI-generated — verify country examples and figures before use.',
@@ -1138,6 +1214,33 @@ modeSynth:'Synthetic',modeReal:'Real data',
  adv_todo:'ما العمل',adv_playbook:'روافع مجرّبة',adv_sim:'محاكاة',adv_simOn:'ضمن خطة العلاج',adv_horizon:'النتائج خلال {h}',
  plat_aiNote:'يرسل درجات هذا النظام ومؤشراته والمقارنة مع النظراء وقائمة تدخلات المحاكي إلى Anthropic عبر هذه المنصة باستخدام مفتاح المؤسسة. لا يُرسل شيء حتى تضغط «إنشاء».',plat_aiOn:'الذكاء الاصطناعي مفعّل — يُدار المفتاح من إعدادات المنصة.',plat_aiOff:'لم يُفعَّل الذكاء الاصطناعي بعد. اطلب من المسؤول إضافة مفتاح Anthropic في الإعدادات، أو استخدم «نسخ النص».',plat_aiOffAdmin:'لم يُحفظ مفتاح Anthropic بعد.',plat_openSettings:'فتح الإعدادات',plat_settings:'الإعدادات',plat_logout:'تسجيل الخروج',plat_admin:'مسؤول',plat_signedIn:'مسجّل الدخول باسم',
 mn_overview:'نظرة عامة',mn_systems:'الأنظمة',mn_improve:'التحسين',mn_treat:'العلاج',mn_trends:'الاتجاهات',ds_show:'تغيير',ds_hide:'إخفاء',
+rep_btn:'تصدير تقرير',rep_dlgTitle:'تصدير تقرير عن الحالة',rep_dlgSub:'لقطة للشهر الحالي في تبويب «{tab}»، تتضمن الكائن الحي والرسوم البيانية والتشخيص والتوصيات.',
+rep_kind:'التقرير',rep_summary:'ملخص في صفحة واحدة',rep_summaryD:'الدرجات الرئيسية والكائن الحي والعلامات الحيوية والتشخيص والإنذارات المبكرة والإجراءات ذات الأولوية والاتجاه، في صفحة واحدة.',
+rep_detailed:'تقرير مفصّل',rep_detailedD:'كل ما في الملخص، إضافة إلى عرضي الكائن الحي وخصائص المرونة وكل نظام بمؤشراته وسجل التجدد والاستنزاف واختبارات الضغط والتدخلات وخيارات التحسين والمنهجية.',
+rep_format:'الصيغة',rep_pdfD:'تنسيق ثابت، جاهز للمشاركة أو الطباعة.',rep_docx:'وورد (‎.docx)',rep_docxD:'قابل للتحرير في Word أو Pages أو LibreOffice أو Google Docs.',rep_lang:'اللغة',
+rep_go:'إنشاء التقرير',rep_cancel:'إغلاق',rep_prep:'جارٍ رسم الكائن الحي والرسوم البيانية…',rep_building:'جارٍ إنشاء ملف {fmt}…',rep_done:'تم حفظ {name}.',rep_err:'تعذّر إنشاء التقرير: {err}',
+rep_titleNation:'تقرير حالة الحيوية الوطنية',rep_titleGov:'تقرير حالة الحيوية الحكومية',rep_meta:'الحالة في {month} · البيانات: {src} · أُنشئ في {date}',
+rep_srcSynth:'بيانات تجريبية افتراضية (غير حقيقية)',rep_srcWB:'بيانات البنك الدولي المفتوحة، مرصودة من {from} إلى {to}',rep_srcFiles:'ملفات بيانات، مرصودة من {from} إلى {to}',rep_simAfter:'{n} شهرًا محاكى بعد آخر رصد',
+rep_tileNvi:'مؤشر الحيوية',rep_tileDir:'الاتجاه خلال 6 أشهر',rep_tileAvg:'المتوسط التقليدي',
+rep_orgCap:'يمثل كل عضو نظامًا واحدًا. تُظهر الحلقة حوله صحة النظام من 0 إلى 100 (أخضر ≥ 65، كهرماني 40–64، أحمر < 40)، ويُظهر المركز المؤشر العام.',
+rep_orgRing:'عرض الحلقة',rep_orgBody:'عرض جسم الإنسان',
+rep_vitalsCap:'صحة كل نظام، من الأضعف إلى الأقوى. تحدد الخطوط المتقطعة عتبتي الإجهاد (40) والصحة (65)، والرقم بجانب الشريط هو التغير خلال 6 أشهر.',
+rep_warnings:'الإنذارات المبكرة',rep_noWarn:'لا توجد إنذارات مبكرة هذا الشهر.',rep_actions:'الإجراءات ذات الأولوية',
+rep_trendCap:'المؤشر خلال السنوات الخمس الأخيرة مع توقع لـ 12 شهرًا (المنطقة المظللة). الرمادي المتقطع: المتوسط التقليدي؛ الكهرماني: {head}.',
+rep_exec:'الملخص التنفيذي',rep_facts:'حقائق رئيسية',rep_propsCap:'الخصائص الخمس للنظام الحي. الشكل المصمت: الآن؛ المتقطع: قبل 12 شهرًا.',
+rep_colProp:'الخاصية',rep_colNow:'الآن',rep_col12:'قبل 12 شهرًا',rep_colSystem:'النظام',rep_colOrgan:'العضو',rep_colScore:'الدرجة',rep_colStatus:'الحالة',rep_colChange:'تغير 6 أشهر',rep_colWarn:'إنذار مبكر',rep_yes:'نعم',
+rep_systems:'الأنظمة بالتفصيل',rep_systemsSub:'الأنظمة مرتبة من الأضعف إلى الأقوى. يعرض كل جدول المؤشرات التي تغذي درجة النظام مع وزن كل منها.',
+rep_histCap:'درجة النظام خلال آخر 36 شهرًا (النطاقات: أحمر < 40، كهرماني 40–64، أخضر ≥ 65).',
+rep_colKpi:'المؤشر',rep_colValue:'آخر قيمة',rep_colTarget:'المستهدف',rep_colHealth:'الصحة',rep_colTrend:'اتجاه 6 أشهر',rep_colRole:'الدور',rep_colWeight:'الوزن',
+rep_ledgerCap:'صافي التدفق الشهري إلى كل أصل (التجدد ناقص الاستنزاف) والتغير في رصيده خلال 12 شهرًا.',rep_colAsset:'الأصل',rep_colNet:'صافي التدفق شهريًا',rep_colStock:'تغير الرصيد، 12 شهرًا',rep_depleting:'استنزاف',rep_regenerating:'تجدد',
+rep_events:'سجل الحالة (أحدث الإدخالات)',rep_colMonth:'الشهر',rep_colEvent:'الحدث',
+rep_stress:'اختبار الضغط والتدخلات',rep_noStress:'لم يُجرَ أي اختبار ضغط في هذه الجلسة.',rep_activeShocks:'صدمات لا تزال نشطة',
+rep_iv:'التدخلات النشطة',rep_noIv:'لا توجد تدخلات مفعّلة.',rep_colIv:'التدخل',rep_colCost:'التكلفة',rep_colStart:'بدأ',rep_colRamp:'الأثر المتحقق',
+rep_improve:'كيفية التحسين',rep_improveSub:'خيارات للأنظمة ذات الأولوية. تُضمَّن المقارنات مع النظراء وخطط الذكاء الاصطناعي إذا حُمّلت أو أُنشئت في المستشار قبل التصدير.',
+rep_levers:'روافع مجرّبة',rep_bench:'المقارنة مع النظراء: {group}',rep_colYou:'هذه الدولة',rep_colMedian:'وسيط النظراء',rep_colTop:'الربع الأعلى',rep_colImprovers:'دول تحسّنت',rep_ai:'خطة مخصصة بالذكاء الاصطناعي ({model})',
+rep_method:'المنهجية والمصادر',rep_dataLine:'البيانات: {src}.',
+rep_disclaimer:'أُنشئ بواسطة محاكاة مرصد الحيوية الوطنية. الدرجات تقديرات نموذجية مبنية على المؤشرات المذكورة وليست إحصاءات رسمية؛ التوقعات واختبارات الضغط سيناريوهات وليست تنبؤات.',
+rep_page:'صفحة {n} من {m}',rep_proj:'المؤشر المتوقع بعد 12 شهرًا',rep_mechanism:'الآلية',
 adv_ai:'خطة مخصصة بالذكاء الاصطناعي (Claude)',adv_aiNote:'يرسل درجات هذا النظام ومؤشراته والمقارنة مع النظراء وقائمة تدخلات المحاكي إلى Anthropic باستخدام مفتاحك الخاص. لا يُرسل شيء حتى تضغط «إنشاء». بدون مفتاح، انسخ النص إلى أي مساعد ذكاء اصطناعي.',
  adv_aiSettings:'مفتاح الواجهة البرمجية',adv_key:'مفتاح Anthropic API',adv_remember:'تذكّر على هذا الجهاز',adv_ask:'إنشاء خطة مخصصة',adv_copy:'نسخ النص',adv_copied:'تم نسخ النص — ألصقه في أي مساعد ذكاء اصطناعي.',adv_dl:'تنزيل الملخص',
  adv_thinking:'جارٍ سؤال {model}…',adv_aiErr:'فشل طلب الذكاء الاصطناعي: {err}',adv_noKey:'أضف مفتاح Anthropic API، أو استخدم «نسخ النص» مع أي مساعد ذكاء اصطناعي.',adv_diag:'التشخيص',adv_actions:'الخطوات الأولى',adv_evidence:'الشواهد',adv_risks:'المخاطر',adv_cost:'الكلفة',adv_watch:'مؤشرات قيادية للمتابعة',adv_caveat:'مولَّد بالذكاء الاصطناعي — تحقّق من أمثلة الدول والأرقام قبل الاستخدام.',
@@ -1919,7 +2022,7 @@ function renderLedger(){
 function renderTrend(){
   const s=S,N=60,all=s.series.nvi.length,off=Math.max(0,all-N);
   const nvi=s.series.nvi.slice(off),comp=s.series.comp.slice(off),gdp=s.series.gdp.slice(off),proj=s.an.proj.map(p=>p.nvi);
-  const narrow=($('#trend')?.clientWidth||640)<520;
+  const narrow=!(typeof RPT!=='undefined'&&RPT.wide)&&($('#trend')?.clientWidth||640)<520;
   const W=narrow?380:640,H=narrow?260:250,l=30,r=40,tp=14,b=26,tot=nvi.length+proj.length-1||1;
   const X=i=>l+(W-l-r)*i/tot,Y=v=>tp+(H-tp-b)*(1-v/100),G=v=>tp+(H-tp-b)*(1-(clamp(v,-6,8)+6)/14);
   let g='';
@@ -2493,6 +2596,559 @@ let rsT=null,lastW=0;
 window.addEventListener('resize',()=>{clearTimeout(rsT);rsT=setTimeout(()=>{const w=$('#trend')?.clientWidth||0;if(Math.abs(w-lastW)>40&&S?.cur){lastW=w;renderTrend()}renderDsToggle()},150)});
 MQ.addEventListener?.('change',()=>{dsOpen=!MQ.matches;renderDsToggle()});
 
+/* ================= REPORT EXPORT — one-page summary or detailed report, as PDF or Word (.docx) =================
+   Everything runs in the browser with no libraries: charts are SVG → PNG, the PDF is laid out on canvas pages,
+   the .docx is written as OOXML and zipped by hand. */
+const RPT={wide:false,busy:false};
+const PAL={ink:'#12201C',ink2:'#4B5D57',ink3:'#7A8B85',line:'#D3DDD9',line2:'#E3EAE7',panel2:'#F1F5F3',accent:'#0A6B60',accentSoft:'#D3EAE4',
+  good:'#2C8A4C',warn:'#B7770C',crit:'#BF3A2E',goodSoft:'#DCEFE2',warnSoft:'#F6EAD2',critSoft:'#F6DDDA'};
+const SCOL={good:PAL.good,warn:PAL.warn,crit:PAL.crit,none:PAL.ink3,neutral:PAL.accent};
+const SSOFT={good:PAL.goodSoft,warn:PAL.warnSoft,crit:PAL.critSoft,none:PAL.panel2,neutral:PAL.accentSoft};
+const plain=x=>String(x??'').replace(/<[^>]+>/g,'').replace(/&nbsp;/g,' ').replace(/&lt;/g,'<').replace(/&gt;/g,'>').replace(/&quot;/g,'"').replace(/&#39;/g,"'").replace(/&amp;/g,'&');
+const arrowTxt=d=>d>2?'↑':d<-2?'↓':'→';
+const chipKey={good:'chipNormal',warn:'chipStrained',crit:'chipCritical',none:'chipNoData'};
+const REP_FF=()=>lang==='ar'?"'IBM Plex Sans Arabic','Noto Naskh Arabic',Tahoma,Arial,sans-serif":"'IBM Plex Sans','Helvetica Neue',Arial,sans-serif";
+
+/* ---------- report context ---------- */
+function repCountry(){
+  const s=S;if(!s.real)return L(SYNTH_COUNTRY);
+  const iso=youIso();if(iso)return regionName(iso);
+  const m=s.ds.meta||{};return (lang==='ar'?(m.name_ar||m.name_en):(m.name_en||m.name_ar))||m.country||'—';
+}
+function repSource(){
+  const s=S;if(!s.real)return t('rep_srcSynth');
+  const ds=s.ds;let x=t(srcMode==='online'?'rep_srcWB':'rep_srcFiles',{from:monthKeyLabel(ds.start),to:monthKeyLabel(ds.start+ds.n-1)});
+  if(s.t>s.obsEnd)x+=' · '+t('rep_simAfter',{n:s.t-s.obsEnd});return x;
+}
+function diagFacts(){
+  const s=S,a=s.an,c=s.cur;
+  const nm=id=>lang==='en'?L(VBY[id].name).toLowerCase():L(VBY[id].name);
+  const strong=a.sorted.filter(x=>x.s>=60&&(!s.real||(s.ds.coverage?.[x.id]??1)>=.3)).slice(-2).reverse().map(x=>nm(x.id));
+  const weak=a.sorted.filter(x=>x.s<45).slice(0,2).map(x=>nm(x.id));
+  let note;
+  if(weak.length&&strong.length)note=cap(t('note_both',{strong:join(strong),weak:join(weak),verb:strong.length>1?t('verb2'):t('verb1')}));
+  else if(weak.length)note=t('note_noStrong',{weak:join(weak)});
+  else note=strong.length?cap(t('note_noWeak',{strong:join(strong)})):t('note_none');
+  if(a.dir==='up')note+=t('note_up');else if(a.dir==='down')note+=t('note_down');
+  const lv=(x,keys)=>x==null?'—':t(x<40?keys[0]:x<55?keys[1]:x<70?keys[2]:keys[3]);
+  const covOk=x=>!s.real||(s.ds.coverage?.[x.id]??1)>=.3;const conf=a.sorted.filter(covOk);const pool=conf.length?conf:a.sorted;
+  const crit=a.sorted[0],strongest=pool[pool.length-1];
+  const rows=[
+    [t('curHealth'),{text:`${Math.round(c.nvi)}/100 · ${t('cond_'+a.cond.code)}`,color:SCOL[a.cond.cls],b:true}],
+    [t('rep_proj'),`${Math.round(a.proj[11].nvi)}/100`],
+    [t('regen'),lv(c.props.regeneration,['lv_weak','lv_moderate','lv_adequate','lv_strong'])],
+    [t('shockRes'),lv(c.props.resilience,['rs_low','rs_moderate','rs_good','rs_high'])],
+    [t('critOrgan'),crit?{text:`${L(VBY[crit.id].organ)} — ${L(VBY[crit.id].name)} (${Math.round(crit.s)})`,color:SCOL[status(crit.s)]}:'—'],
+    [t('fastest'),a.fastest&&a.fastest.d< -1?`${L(a.fastest.k.name)} (${a.fastest.d.toFixed(1)})`:t('noneSig')],
+    [t('strongest'),strongest?`${L(VBY[strongest.id].name)} (${Math.round(strongest.s)})`:'—'],
+    [t('priority'),a.pri.length?a.pri.map(p=>L(VBY[p.id].name)).join(t('chainSep')):t('maintain')],
+  ];
+  return{note,rows,chain:a.chain?a.chain.map(id=>L(KBY[id].name)).join(t('chainSep')):null};
+}
+function repWarnings(max){
+  return S.an.warns.slice(0,max).map(w=>({title:t('warnTitle',{name:L(VBY[w.v].name)}),body:plain(t('warnBody',{now:Math.round(w.now),det:w.det.length,leads:w.leads.length,list:w.det.slice(0,3).map(k=>lang==='en'?L(k.name).toLowerCase():L(k.name)).join(t('comma')),p:Math.round(w.p),risk:t('risk_'+w.risk)}))}));
+}
+function priIds(n){const a=S.an;const ids=a.pri.length?a.pri.map(p=>p.id):a.sorted.map(x=>x.id);return ids.slice(0,n)}
+function repActions(max){
+  const ids=priIds(2),out=[];
+  for(let r=0;r<3&&out.length<max;r++)for(const id of ids){const pb=playbookFor(id)[r];if(pb&&out.length<max)out.push({id,pb})}
+  return out.map(({id,pb})=>[{text:L(pb.t),b:true},{text:' — '+L(pb.d)+' '},{text:`(${L(SYSNAME[id])} · ${L(pb.h)})`,color:PAL.ink3}]);
+}
+
+/* ---------- SVG → PNG ---------- */
+const SVG_PROPS=['fill','fill-opacity','stroke','stroke-width','stroke-opacity','stroke-dasharray','stroke-linecap','stroke-linejoin','opacity','font-family','font-size','font-weight','font-style','text-anchor','dominant-baseline','letter-spacing','paint-order','visibility','display'];
+async function pngFromSvgString(xml,w,h){
+  const img=new Image();img.decoding='sync';img.src='data:image/svg+xml;charset=utf-8,'+encodeURIComponent(xml);
+  await (img.decode?img.decode():new Promise((ok,no)=>{img.onload=ok;img.onerror=no}));
+  const cv=document.createElement('canvas');cv.width=Math.round(w);cv.height=Math.round(h);
+  const g=cv.getContext('2d');g.fillStyle='#fff';g.fillRect(0,0,cv.width,cv.height);g.drawImage(img,0,0,cv.width,cv.height);
+  const url=cv.toDataURL('image/png');const im=new Image();im.src=url;await (im.decode?im.decode():new Promise(ok=>im.onload=ok));
+  return{url,w:cv.width,h:cv.height,img:im};
+}
+async function pngFromSvgEl(el,scale=2,hide=[]){
+  const root=document.documentElement,prevTheme=root.getAttribute('data-theme');root.setAttribute('data-theme','light');
+  try{
+    const vb=(el.getAttribute('viewBox')||`0 0 ${el.clientWidth||500} ${el.clientHeight||500}`).split(/[\s,]+/).map(Number);
+    const clone=el.cloneNode(true);
+    const src=[el,...el.querySelectorAll('*')],dst=[clone,...clone.querySelectorAll('*')];
+    src.forEach((n,i)=>{const cs=getComputedStyle(n);let st='';for(const p of SVG_PROPS){const v=cs.getPropertyValue(p);if(v!=='')st+=`${p}:${v};`}dst[i].setAttribute('style',st+'animation:none;transition:none')});
+    clone.querySelectorAll('title').forEach(x=>x.remove());
+    hide.forEach(q=>clone.querySelectorAll(q).forEach(x=>x.setAttribute('style',(x.getAttribute('style')||'')+';display:none')));
+    clone.classList.remove('hovering');
+    clone.setAttribute('xmlns','http://www.w3.org/2000/svg');
+    clone.setAttribute('width',vb[2]*scale);clone.setAttribute('height',vb[3]*scale);
+    clone.setAttribute('style',(clone.getAttribute('style')||'')+';direction:ltr;background:#fff');
+    return await pngFromSvgString(new XMLSerializer().serializeToString(clone),vb[2]*scale,vb[3]*scale);
+  }finally{if(prevTheme==null)root.removeAttribute('data-theme');else root.setAttribute('data-theme',prevTheme)}
+}
+async function captureOrganism(view){
+  const prev=orgView;
+  if(view!==prev){orgView=view;buildOrganism();renderOrganism()}
+  try{return await pngFromSvgEl($('#orgSvg'),2.2,['.halo','.site-halo','.hexhalo'])}
+  finally{if(view!==prev){orgView=prev;buildOrganism();renderOrganism()}}
+}
+const svgWrap=(W,H,g)=>`<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${W} ${H}" width="${W*2}" height="${H*2}" font-family="${REP_FF()}" style="direction:ltr"><rect width="${W}" height="${H}" fill="#fff"/>${g}</svg>`;
+
+function chartVitals(W=720){
+  const s=S,c=s.cur,a=s.an,rtl=lang==='ar';
+  const rows=VS.map(v=>({v,sc:c.vit[v.id],d:a.vitDir[v.id]})).sort((x,y)=>(x.sc??-1)-(y.sc??-1));
+  const rowH=36,top=26,labW=Math.round(W*.375),valW=96,barW=W-labW-valW-16,H=top+rows.length*rowH+6;
+  const X=px=>rtl?W-px:px,anc=e=>rtl?(e==='end'?'start':'end'):e;
+  let g='';
+  rows.forEach((r,i)=>{const y=top+i*rowH,st=status(r.sc),col=SCOL[st],bw=barW*clamp(r.sc??0,0,100)/100;
+    const bx=rtl?W-labW-barW:labW;
+    g+=`<text x="${X(labW-12)}" y="${y+15}" font-size="14" font-weight="600" fill="${PAL.ink}" text-anchor="${anc('end')}">${esc(L(r.v.name))}</text>`;
+    g+=`<text x="${X(labW-12)}" y="${y+30}" font-size="11" fill="${PAL.ink3}" text-anchor="${anc('end')}">${esc(L(r.v.organ))}</text>`;
+    g+=`<rect x="${bx}" y="${y+7}" width="${barW}" height="20" rx="3" fill="${PAL.panel2}"/>`;
+    if(r.sc!=null)g+=`<rect x="${rtl?bx+barW-bw:bx}" y="${y+7}" width="${bw.toFixed(1)}" height="20" rx="3" fill="${col}"/>`;
+    const dcol=r.d.dir==='up'?PAL.good:r.d.dir==='down'?PAL.crit:PAL.ink3;
+    g+=`<text x="${X(labW+barW+12)}" y="${y+22}" font-size="15" font-weight="700" fill="${PAL.ink}" text-anchor="${anc('start')}" direction="ltr">${R(r.sc)}<tspan font-size="11.5" font-weight="400" fill="${dcol}" dx="6">${r.sc!=null?arrow(r.d.dir)+' '+sgn(r.d.d):''}</tspan></text>`;
+  });
+  [40,65].forEach(th=>{const x=X(labW+barW*th/100);g+=`<line x1="${x}" x2="${x}" y1="${top-4}" y2="${H-4}" stroke="${PAL.ink3}" stroke-opacity=".55" stroke-dasharray="3 3"/><text x="${x}" y="${top-9}" font-size="11" fill="${PAL.ink3}" text-anchor="middle">${th}</text>`});
+  return[svgWrap(W,H,g),W*2,H*2];
+}
+function chartLedger(){
+  const s=S,rtl=lang==='ar';
+  const rows=LEDGER.map(a=>{const Lg=s.ledger[a.id],h12=Lg.hist[Math.max(0,Lg.hist.length-13)];return{a,net:Lg.nodata?null:Lg.net,pct:(Lg.stock-h12)/h12*100}});
+  const W=720,rowH=34,top=30,labW=230,rightW=110,plotW=W-labW-rightW,mid=labW+plotW/2,half=plotW/2-8,H=top+rows.length*rowH+6;
+  const mx=Math.max(.5,...rows.map(r=>Math.abs(r.net??0)));
+  const X=px=>rtl?W-px:px,anc=e=>rtl?(e==='end'?'start':'end'):e;
+  let g=`<text x="${X(mid-10)}" y="${top-12}" font-size="11.5" fill="${PAL.crit}" text-anchor="${anc('end')}">← ${esc(t('rep_depleting'))}</text><text x="${X(mid+10)}" y="${top-12}" font-size="11.5" fill="${PAL.good}" text-anchor="${anc('start')}">${esc(t('rep_regenerating'))} →</text>`;
+  rows.forEach((r,i)=>{const y=top+i*rowH;
+    g+=`<text x="${X(labW-12)}" y="${y+21}" font-size="13.5" font-weight="600" fill="${PAL.ink}" text-anchor="${anc('end')}">${esc(L(r.a.name))}</text>`;
+    g+=`<rect x="${labW*(rtl?0:1)+(rtl?rightW:0)}" y="${y+6}" width="${plotW}" height="22" fill="${i%2?'#fff':PAL.panel2}"/>`;
+    if(r.net!=null){const len=Math.abs(r.net)/mx*half,pos=r.net>=0,x0=pos?mid:mid-len;const xx=rtl?W-(x0+len):x0;
+      g+=`<rect x="${xx.toFixed(1)}" y="${y+9}" width="${len.toFixed(1)}" height="16" rx="2" fill="${pos?PAL.good:PAL.crit}"/>`;
+      const tx=pos?mid+len+6:mid-len-6;g+=`<text x="${X(tx)}" y="${y+21.5}" font-size="12" font-weight="600" fill="${pos?PAL.good:PAL.crit}" text-anchor="${anc(pos?'start':'end')}" direction="ltr">${sgn(r.net,2)}</text>`}
+    g+=`<text x="${X(W-8)}" y="${y+21.5}" font-size="12" fill="${PAL.ink2}" text-anchor="${anc('end')}" direction="ltr">${sgn(r.pct)}%</text>`;
+  });
+  g+=`<line x1="${X(mid)}" x2="${X(mid)}" y1="${top}" y2="${H-4}" stroke="${PAL.ink2}"/>`;
+  return[svgWrap(W,H,g),W*2,H*2];
+}
+function chartHist(vid){
+  const s=S,arr=s.series.vit[vid].slice(-36),n=arr.length,W=560,H=150,l=30,r=12,tp=10,b=24;
+  const X=i=>l+(W-l-r)*i/Math.max(1,n-1),Y=v=>tp+(H-tp-b)*(1-v/100);
+  let g=`<rect x="${l}" y="${Y(100)}" width="${W-l-r}" height="${Y(65)-Y(100)}" fill="${PAL.goodSoft}" fill-opacity=".55"/><rect x="${l}" y="${Y(65)}" width="${W-l-r}" height="${Y(40)-Y(65)}" fill="${PAL.warnSoft}" fill-opacity=".55"/><rect x="${l}" y="${Y(40)}" width="${W-l-r}" height="${Y(0)-Y(40)}" fill="${PAL.critSoft}" fill-opacity=".45"/>`;
+  [0,40,65,100].forEach(v=>{g+=`<text x="${l-5}" y="${Y(v)+4}" font-size="10" fill="${PAL.ink3}" text-anchor="end">${v}</text>`});
+  if(s.real&&s.t>s.obsEnd){const i=n-1-(s.t-s.obsEnd);if(i>0&&i<n-1)g+=`<line x1="${X(i)}" x2="${X(i)}" y1="${tp}" y2="${H-b}" stroke="${PAL.ink2}" stroke-dasharray="2 3"/>`}
+  let d='',pen=false;arr.forEach((v,i)=>{if(!Number.isFinite(v)){pen=false;return}d+=(pen?'L':'M')+X(i).toFixed(1)+' '+Y(v).toFixed(1)+' ';pen=true});
+  const last=arr[n-1],col=SCOL[status(last)];
+  if(d)g+=`<path d="${d}" fill="none" stroke="${col}" stroke-width="2.4" stroke-linejoin="round"/>`;
+  if(Number.isFinite(last))g+=`<circle cx="${X(n-1)}" cy="${Y(last)}" r="3.8" fill="${col}"/>`;
+  g+=`<text x="${l}" y="${H-7}" font-size="10.5" fill="${PAL.ink3}">${esc(monthLabel(s.t-n+1))}</text><text x="${W-r}" y="${H-7}" font-size="10.5" fill="${PAL.ink3}" text-anchor="end">${esc(monthLabel(s.t))}</text>`;
+  return[svgWrap(W,H,g),W*2,H*2];
+}
+
+/* ---------- block helpers ---------- */
+const bP=(runs,o={})=>({t:'p',runs:typeof runs==='string'?[{text:runs}]:runs,...o});
+const bH2=text=>({t:'h2',text}),bH3=text=>({t:'h3',text});
+const bImg=(im,o={})=>({t:'img',im,...o});
+const bTable=(cols,rows,o={})=>({t:'table',cols,rows,...o});
+const bUl=items=>({t:'ul',items:items.map(x=>typeof x==='string'?[{text:x}]:x)});
+const bCols=(parts,o={})=>({t:'cols',parts,...o});
+const BREAK={t:'pagebreak'};
+
+function titleBlock(kind){
+  return{t:'title',eyebrow:`${t('title')} · ${t(kind==='summary'?'rep_summary':'rep_detailed')}`,
+    title:`${t(PROFILE==='gov'?'rep_titleGov':'rep_titleNation')} — ${repCountry()}`,
+    meta:t('rep_meta',{month:monthLabel(S.t),src:repSource(),date:new Date().toLocaleDateString(lang==='ar'?'ar-u-nu-latn':'en-GB',{day:'numeric',month:'long',year:'numeric'})})};
+}
+function tilesBlock(){
+  const c=S.cur,a=S.an,gap=c.comp-c.nvi,gdp=a.gdpNow;
+  return{t:'tiles',items:[
+    {label:t('rep_tileNvi'),value:`${Math.round(c.nvi)}`,unit:'/100',sub:t('cond_'+a.cond.code),color:SCOL[a.cond.cls]},
+    {label:t('rep_tileDir'),value:`${arrow(a.dir)} ${sgn(a.nd)}`,sub:t('dir_'+a.dir),color:a.dir==='up'?PAL.good:a.dir==='down'?PAL.crit:PAL.ink2},
+    {label:t('rep_tileAvg'),value:`${Math.round(c.comp)}`,unit:'/100',sub:plain(gap>=3?t('compHides',{n:Math.round(gap)}):t('compBalanced')),color:PAL.ink},
+    {label:t('gdp'),value:gdp!=null?`${sgn(gdp)}%`:'—',sub:gdp!=null?plain(t('gdpRead',{r:t(gdp>=3?'gdpHealthy':gdp>=1?'gdpModerate':'gdpWeak')})):'',color:PAL.warn},
+  ]};
+}
+function warningsBlocks(max){
+  const w=repWarnings(max);
+  return w.length?[bUl(w.map(x=>[{text:x.title,b:true},{text:' — '+x.body}]))]:[bP(t('rep_noWarn'),{color:PAL.ink3})];
+}
+
+function buildSummary(im){
+  const f=diagFacts();
+  return[
+    titleBlock('summary'),tilesBlock(),
+    bCols([{w:.46,blocks:[bH3(t('organism')),bImg(im.org,{maxH:232,cap:t('rep_orgCap')})]},{w:.54,blocks:[bH3(t('vitalsTitle')),bImg(im.vitals,{maxH:232,cap:t('rep_vitalsCap')})]}]),
+    bCols([{w:.52,blocks:[bH3(t('diag')),bP(f.note,{after:4}),bTable([{w:.38},{w:.62}],f.rows,{noHead:true,compact:true})]},
+           {w:.48,blocks:[bH3(t('rep_warnings')),...warningsBlocks(3),bH3(t('rep_actions')),bUl(repActions(3))]}]),
+    bH3(t('trendTitle')),bImg(im.trend,{maxH:150,cap:t('rep_trendCap',{head:t('gdp')})}),
+    bP(t('rep_disclaimer'),{size:6.6,color:PAL.ink3}),
+  ];
+}
+
+function buildDetailed(im){
+  const s=S,c=s.cur,a=s.an,f=diagFacts(),B=[];
+  const warned=new Set(a.warns.map(w=>w.v));
+  B.push(titleBlock('detailed'),tilesBlock());
+  // 1 executive summary
+  B.push(bH2(t('rep_exec')),bP(f.note));
+  const gap=c.comp-c.nvi;
+  B.push(bP(plain(gap>=3?t('compHides',{n:Math.round(gap)}):t('compBalanced'))+(a.gdpNow!=null?' '+plain(t('gdpRead',{r:t(a.gdpNow>=3?'gdpHealthy':a.gdpNow>=1?'gdpModerate':'gdpWeak')})):''),{color:PAL.ink2}));
+  B.push(bH3(t('rep_facts')),bTable([{w:.34},{w:.66}],f.rows,{noHead:true,compact:true}),bH3(t('rep_actions')),bUl(repActions(4)));
+  // 2 organism
+  B.push(BREAK,bH2(t('organism')));
+  B.push(bCols([{w:.5,blocks:[bImg(im.orgRing,{maxH:300,cap:t('rep_orgRing')})]},{w:.5,blocks:[bImg(im.orgBody,{maxH:300,cap:t('rep_orgBody')})]}]));
+  B.push(bP(t('rep_orgCap'),{color:PAL.ink2}));
+  // 3 vital signs
+  B.push(bH2(t('vitalsTitle')),bImg(im.vitals,{width:.92,cap:t('rep_vitalsCap')}));
+  const vrows=VS.map(v=>({v,sc:c.vit[v.id],d:a.vitDir[v.id]})).sort((x,y)=>(x.sc??-1)-(y.sc??-1));
+  B.push(bTable([{h:t('rep_colOrgan'),w:.2},{h:t('rep_colSystem'),w:.34},{h:t('rep_colScore'),w:.1,align:'end'},{h:t('rep_colStatus'),w:.14},{h:t('rep_colChange'),w:.12,align:'end'},{h:t('rep_colWarn'),w:.1}],
+    vrows.map(r=>{const st=status(r.sc);return[L(r.v.organ),L(r.v.name),{text:R(r.sc),b:true,color:SCOL[st]},{text:t(chipKey[st]),color:SCOL[st]},r.sc!=null?`${arrow(r.d.dir)} ${sgn(r.d.d)}`:'—',warned.has(r.v.id)?{text:t('rep_yes'),color:PAL.warn,b:true}:'—']})));
+  // 4 properties
+  B.push(bH2(t('nvi')));
+  const prow=PROPS.map(p=>{const arr=s.series.prop[p],v0=arr[Math.max(0,arr.length-13)],v=c.props[p];return[t('prop_'+p),{text:R(v),b:true,color:SCOL[status(v)]},Number.isFinite(v0)?String(Math.round(v0)):'—']});
+  B.push(bCols([{w:.52,blocks:[bImg(im.radar,{maxH:210,cap:t('rep_propsCap')})]},{w:.48,blocks:[bTable([{h:t('rep_colProp'),w:.5},{h:t('rep_colNow'),w:.22,align:'end'},{h:t('rep_col12'),w:.28,align:'end'}],prow),bP(t('nviSub'),{color:PAL.ink3,size:8})]}]));
+  // 5 diagnosis
+  B.push(bH2(t('diag')),bP(f.note));
+  if(f.chain)B.push(bP([{text:t('rep_mechanism')+': ',b:true},{text:f.chain}]));
+  const allW=repWarnings(20);
+  if(allW.length)allW.forEach(w=>B.push({t:'callout',tone:'warn',title:w.title,text:w.body}));else B.push(bP(t('rep_noWarn'),{color:PAL.ink3}));
+  // 6 systems
+  B.push(bH2(t('rep_systems')),bP(t('rep_systemsSub'),{color:PAL.ink2}));
+  vrows.forEach(r=>{
+    const v=r.v,st=status(r.sc),ks=contributors(v.id),tw=ks.reduce((q,x)=>q+x.w,0);
+    B.push(bH3(`${L(v.organ)} — ${L(v.name)}`));
+    const facts=[[t('rep_colScore'),{text:`${R(r.sc)}/100 · ${t(chipKey[st])}`,b:true,color:SCOL[st]}],[t('rep_colChange'),r.sc!=null?`${arrow(r.d.dir)} ${sgn(r.d.d)}`:'—'],[t('rep_colSystem'),L(SYSNAME[v.id])],[t('rep_colWarn'),warned.has(v.id)?t('rep_yes'):'—']];
+    if(s.real&&s.ds.coverage)facts.push([t('r_coverage'),`${Math.round((s.ds.coverage[v.id]??0)*100)}%`]);
+    B.push(bCols([{w:.56,blocks:[bImg(im.hist[v.id],{cap:t('rep_histCap'),capSmall:true})]},{w:.44,blocks:[bTable([{w:.45},{w:.55}],facts,{noHead:true,compact:true})]}],{keep:true}));
+    B.push(bTable([{h:t('rep_colKpi'),w:.31},{h:t('rep_colValue'),w:.2,align:'end'},{h:t('rep_colTarget'),w:.12,align:'end'},{h:t('rep_colHealth'),w:.1,align:'end'},{h:t('rep_colTrend'),w:.11,align:'end'},{h:t('rep_colRole'),w:.1},{h:t('rep_colWeight'),w:.06,align:'end'}],
+      ks.map(({k,w})=>{const miss=isMiss(s,k.id),h=s.h[k.id],kst=miss?'none':status(h),d=miss?0:chg(s.hist[k.id],6),lb=k.hi<k.lo;
+        return[k.lead?[{text:L(k.name)}]:L(k.name),miss?{text:t('noData'),color:PAL.ink3}:`${fmtRaw(k,h)} ${L(k.unit)}`,`${lb?'≤':'≥'} ${k.target}`,miss?'—':{text:String(Math.round(h)),b:true,color:SCOL[kst]},miss?'—':`${arrowTxt(d)} ${sgn(d)}`,k.lead?t('leading'):t('lagging'),`${Math.round(w/tw*100)}%`]}),{small:true}));
+  });
+  // 7 ledger
+  B.push(bH2(t('ledgerTitle')),bImg(im.ledger,{width:.92,cap:t('rep_ledgerCap')}));
+  B.push(bTable([{h:t('rep_colAsset'),w:.46},{h:t('rep_colNet'),w:.27,align:'end'},{h:t('rep_colStock'),w:.27,align:'end'}],LEDGER.map(as=>{const Lg=s.ledger[as.id],h12=Lg.hist[Math.max(0,Lg.hist.length-13)],pct=(Lg.stock-h12)/h12*100;
+    return[[{text:L(as.name),b:true},{text:' · '+L(as.desc),color:PAL.ink3}],Lg.nodata?t('insufficient'):{text:sgn(Lg.net,2),color:Lg.net>.03?PAL.good:Lg.net< -.03?PAL.crit:PAL.ink2,b:true},`${sgn(pct)}%`]})));
+  const names=a.depleting.map(x=>lang==='en'?L(x.name).toLowerCase():L(x.name));
+  if(a.gdpNow!=null&&a.gdpNow>1.5&&a.depleting.length>=3)B.push({t:'callout',tone:'crit',title:'',text:plain(t('flagConsume',{g:a.gdpNow.toFixed(1),n:a.depleting.length,list:names.join(t('comma'))}))});
+  else if(a.depleting.length>=4)B.push({t:'callout',tone:'warn',title:'',text:plain(t('flagBroad',{n:a.depleting.length}))});
+  // 8 trend
+  B.push(bH2(t('trendTitle')),bImg(im.trend,{width:.95,cap:t('rep_trendCap',{head:t('gdp')})}));
+  if(s.events.length){B.push(bH3(t('rep_events')),bTable([{h:t('rep_colMonth'),w:.2},{h:t('rep_colEvent'),w:.8}],s.events.slice(0,12).map(e=>[monthLabel(e.t),plain(e.fn())]),{small:true}))}
+  // 9 stress + interventions
+  B.push(bH2(t('rep_stress')));
+  const x=s.lastShock;
+  if(x){const def=SBY[x.id],fm=v=>(v>=0?'+':'')+v.toFixed(1);
+    B.push(bH3(plain(t('si_title',{name:L(def.name)+' ('+t('sev_'+x.sev)+')',when:monthLabel(x.t)}))));
+    B.push(bTable([{w:.6},{w:.4,align:'end'}],[[t('si_now'),`${x.nviBefore.toFixed(1)} → ${x.nviAfter.toFixed(1)}`],[t('si_gap12'),{text:fm(x.gap12),color:PAL.crit}],[t('si_worst'),{text:fm(x.maxGap),color:PAL.crit}],[t('si_gap60'),fm(x.gap60)],[t('si_rec'),x.recover!=null?t('si_recN',{n:x.recover}):t('si_recNo')]],{noHead:true,compact:true}));
+    if(x.deltas.length)B.push(bP([{text:t('si_hit')+': ',b:true},{text:x.deltas.slice(0,5).map(d=>`${L(VBY[d.id].organ)} · ${L(SYSNAME[d.id])} (${d.d.toFixed(1)})`).join(t('comma'))}]));
+    B.push(bP(plain(t('si_dmg',{d:x.dmg.toFixed(2),r:x.res}))+' '+plain(t('si_why')),{color:PAL.ink3,size:8}));
+  }else B.push(bP(t('rep_noStress'),{color:PAL.ink3}));
+  if(s.shocks.length)B.push(bP([{text:t('rep_activeShocks')+': ',b:true},{text:s.shocks.map(q=>`${L(SBY[q.id].name)} (${t('moLeft',{n:q.left})})`).join(' · ')}]));
+  B.push(bH3(t('rep_iv')));
+  const ivs=Object.entries(s.iv);
+  if(ivs.length)B.push(bTable([{h:t('rep_colIv'),w:.5},{h:t('rep_colCost'),w:.14,align:'end'},{h:t('rep_colStart'),w:.18},{h:t('rep_colRamp'),w:.18,align:'end'}],ivs.map(([id,st0])=>{const iv=IVBY[id];return[L(iv.name),`${iv.cost} ${t('pts')}`,monthLabel(st0),`${Math.round(clamp((s.t-st0)/iv.ramp,0,1)*100)}%`]})));
+  else B.push(bP(t('rep_noIv'),{color:PAL.ink3}));
+  // 10 improve
+  B.push(bH2(t('rep_improve')),bP(t('rep_improveSub'),{color:PAL.ink2}));
+  priIds(3).forEach(id=>{
+    B.push(bH3(t('adv_title',{organ:L(VBY[id].organ),sys:L(SYSNAME[id])})));
+    B.push(bP(t('rep_levers'),{b:true,after:2}),bUl(playbookFor(id).map(p=>[{text:L(p.t),b:true},{text:' — '+L(p.d)+' '},{text:`(${L(p.h)})`,color:PAL.ink3}])));
+    const bk=Object.keys(ADV.cache).find(k=>k.startsWith(`${PROFILE}|${id}|`));const bm=bk&&ADV.cache[bk];
+    if(bm){const grp=bm.group==='all'?t('grp_all'):bm.group==='region'?(bm.meta?.regionName||t('grp_region')):(bm.meta?.incomeName||t('grp_income'));
+      B.push(bP(t('rep_bench',{group:grp}),{b:true,after:2}));
+      B.push(bTable([{h:t('rep_colKpi'),w:.3},{h:t('rep_colYou'),w:.15,align:'end'},{h:t('rep_colMedian'),w:.13,align:'end'},{h:t('rep_colTop'),w:.13,align:'end'},{h:t('rep_colImprovers'),w:.29}],
+        bm.rows.filter(r=>!r.noGlobal).map(r=>[L(r.k.name),r.me?`${fmtNum(r.me.v1,r.k.dec)} (${r.me.y1})`:'—',r.med!=null?fmtNum(raw(r.k,r.med),r.k.dec):'—',r.p75!=null?fmtNum(raw(r.k,r.p75),r.k.dec):'—',r.improvers.slice(0,3).map(q=>regionName(q.c)).join(t('comma'))||'—']),{small:true}))}
+    const ak=Object.keys(ADV.ai).find(k=>k.startsWith(`${PROFILE}|${id}|`)&&k.endsWith('|'+lang)&&ADV.ai[k]?.data);
+    if(ak){const ai=ADV.ai[ak],d=ai.data;
+      B.push(bP(t('rep_ai',{model:ai.model||'Claude'}),{b:true,after:2}));
+      if(d.diagnosis)B.push(bP(d.diagnosis));
+      B.push(bUl((d.recommendations||[]).map(r=>[{text:r.title||'',b:true},{text:(r.why?' — '+r.why:'')+(Array.isArray(r.actions)&&r.actions.length?' '+t('adv_actions')+': '+r.actions.join('; ')+'.':'')},{text:[r.horizon,r.cost].filter(Boolean).length?` (${[r.horizon,r.cost].filter(Boolean).join(' · ')})`:'',color:PAL.ink3}])));
+      B.push(bP(t('adv_caveat'),{color:PAL.ink3,size:8}));
+    }
+  });
+  // 11 method
+  B.push(bH2(t('rep_method')));
+  for(let i=1;i<=6;i++)B.push(bP([{text:plain(t('m'+i+'h'))+'. ',b:true},{text:plain(t('m'+i+'p'))}]));
+  B.push(bP(t('rep_dataLine',{src:repSource()})),bP(t('rep_disclaimer'),{color:PAL.ink3,size:8}));
+  return B;
+}
+
+/* ---------- PDF (canvas pages → JPEG → PDF) ---------- */
+const PG={W:595.28,H:841.89};
+const AR_RE=/[\u0590-\u08FF\uFB1D-\uFEFC]/;
+function repFam(){return lang==='ar'?{body:'"IBM Plex Sans Arabic","Noto Naskh Arabic",Tahoma,Arial,sans-serif',disp:'"IBM Plex Sans Arabic",Tahoma,Arial,sans-serif'}:{body:'"IBM Plex Sans","Helvetica Neue",Arial,sans-serif',disp:'"IBM Plex Sans Condensed","IBM Plex Sans","Arial Narrow",Arial,sans-serif'}}
+function wrapRuns(ctx,runs,maxW,st){
+  const toks=[];
+  for(const r of runs){const f=`${r.b||st.b?700:400} ${r.size||st.size}px ${st.fam}`;ctx.font=f;
+    for(const piece of String(r.text??'').split(/(\s+)/)){if(!piece)continue;const sp=/^\s+$/.test(piece);const s0=sp?' ':piece;toks.push({s:s0,f,c:r.color||st.color,sp,w:ctx.measureText(s0).width})}}
+  const lines=[];let cur=[],cw=0;
+  const flush=()=>{while(cur.length&&cur[cur.length-1].sp)cw-=cur.pop().w;lines.push({toks:cur,w:cw});cur=[];cw=0};
+  for(const tk of toks){
+    if(tk.sp){if(cur.length){cur.push(tk);cw+=tk.w}continue}
+    if(cw+tk.w>maxW&&cur.length)flush();
+    if(tk.w>maxW){ctx.font=tk.f;let buf='';for(const ch of tk.s){if(ctx.measureText(buf+ch).width>maxW&&buf){const w=ctx.measureText(buf).width;cur.push({...tk,s:buf,w});cw+=w;flush();buf=ch}else buf+=ch}
+      if(buf){const w=ctx.measureText(buf).width;cur.push({...tk,s:buf,w});cw+=w}}
+    else{cur.push(tk);cw+=tk.w}
+  }
+  if(cur.length||!lines.length)flush();
+  return lines;
+}
+function drawLine(g,ln,x,yBase,w,align,rtl){
+  const a=align||'start';const px=a==='center'?(w-ln.w)/2:((a==='start')!==rtl)?0:w-ln.w;
+  g.textBaseline='alphabetic';g.textAlign='left';
+  if(!rtl){g.direction='ltr';let cx=x+px;for(const tk of ln.toks){g.font=tk.f;g.fillStyle=tk.c;g.fillText(tk.s,cx,yBase);cx+=tk.w}}
+  else{let cx=x+px+ln.w;for(const tk of ln.toks){cx-=tk.w;g.font=tk.f;g.fillStyle=tk.c;g.direction='rtl';g.fillText(AR_RE.test(tk.s)?tk.s:'\u2066'+tk.s+'\u2069',cx,yBase)}g.direction='ltr'}
+}
+function textBox(ctx,runs,w,st,align){const lines=wrapRuns(ctx,runs,w,st),lh=st.size*(st.lh||1.42),rtl=lang==='ar';
+  return{h:lines.length*lh,draw:(g,x,y)=>lines.forEach((ln,i)=>drawLine(g,ln,x,y+i*lh+st.size*1.02,w,align,rtl))}}
+const rr=(g,x,y,w,h,r,fill)=>{g.beginPath();g.moveTo(x+r,y);g.arcTo(x+w,y,x+w,y+h,r);g.arcTo(x+w,y+h,x,y+h,r);g.arcTo(x,y+h,x,y,r);g.arcTo(x,y,x+w,y,r);g.closePath();g.fillStyle=fill;g.fill()};
+const cellRuns=cell=>cell==null?[{text:''}]:Array.isArray(cell)?cell:typeof cell==='object'?[{text:cell.text,b:cell.b,color:cell.color}]:[{text:String(cell)}];
+
+function pdfPieces(ctx,b,w,Z){
+  const rtl=lang==='ar',F=repFam(),gap=b.after??Z.gap;
+  const one=(h,draw,o={})=>[{h:h+gap,draw,...o}];
+  switch(b.t){
+  case 'p':{const st={size:b.size||Z.p,fam:F.body,color:b.color||PAL.ink,b:b.b};const lines=wrapRuns(ctx,b.runs,w,st),lh=st.size*1.42;
+    return lines.map((ln,i)=>({h:lh+(i===lines.length-1?gap:0),draw:(g,x,y)=>drawLine(g,ln,x,y+st.size*1.02,w,b.align,rtl)}))}
+  case 'h2':case 'h3':{const big=b.t==='h2';const st={size:big?Z.h2:Z.h3,fam:F.disp,color:big?PAL.accent:PAL.ink,b:true};const tb=textBox(ctx,[{text:b.text}],w,st);
+    const pad=big?Z.h2*.5:Z.h3*.35;
+    return[{h:pad+tb.h+(big?6:3),keepNext:true,draw:(g,x,y)=>{tb.draw(g,x,y+pad);if(big){g.fillStyle=PAL.line;g.fillRect(x,y+pad+tb.h+2,w,.8)}}}]}
+  case 'title':{const e=textBox(ctx,[{text:b.eyebrow}],w,{size:Z.p*.85,fam:F.body,color:PAL.accent,b:true});
+    const ti=textBox(ctx,[{text:b.title}],w,{size:Z.title,fam:F.disp,color:PAL.ink,b:true,lh:1.2});
+    const me=textBox(ctx,[{text:b.meta}],w,{size:Z.p*.82,fam:F.body,color:PAL.ink3});
+    const h=e.h+2+ti.h+3+me.h+8;
+    return one(h,(g,x,y)=>{e.draw(g,x,y);ti.draw(g,x,y+e.h+2);me.draw(g,x,y+e.h+2+ti.h+3);g.fillStyle=PAL.accent;g.fillRect(x,y+h-3,w,1.6)})}
+  case 'tiles':{const n=b.items.length,gp=8,tw=(w-gp*(n-1))/n,pad=7;
+    const boxes=b.items.map(it=>{const lab=textBox(ctx,[{text:it.label}],tw-pad*2,{size:Z.p*.78,fam:F.body,color:PAL.ink3});
+      const vr=[{text:it.value,color:it.color,b:true,size:Z.p*2.1},{text:it.unit?' '+it.unit:'',color:PAL.ink3,size:Z.p*.9}];if(rtl)vr.reverse();const val=textBox(ctx,vr,tw-pad*2,{size:Z.p*2.1,fam:F.disp,color:it.color,lh:1.15});
+      const sub=textBox(ctx,[{text:it.sub||''}],tw-pad*2,{size:Z.p*.78,fam:F.body,color:it.color===PAL.ink?PAL.ink2:it.color});
+      return{lab,val,sub,h:pad+lab.h+1+val.h+sub.h+pad}});
+    const h=Math.max(...boxes.map(x=>x.h));
+    return one(h,(g,x,y)=>boxes.forEach((bx,i)=>{const k=rtl?n-1-i:i,xx=x+k*(tw+gp);rr(g,xx,y,tw,h,4,PAL.panel2);bx.lab.draw(g,xx+pad,y+pad);bx.val.draw(g,xx+pad,y+pad+bx.lab.h+1);bx.sub.draw(g,xx+pad,y+pad+bx.lab.h+1+bx.val.h)}))}
+  case 'img':{const im=b.im;if(!im)return[];let dw=Math.min(w*(b.width||1),w),dh=dw*im.h/im.w;if(b.maxH&&dh>b.maxH){dh=b.maxH;dw=dh*im.w/im.h}
+    const cp=b.cap?textBox(ctx,[{text:b.cap}],w,{size:Z.p*.76,fam:F.body,color:PAL.ink3}):{h:0,draw(){}};
+    return one(dh+(b.cap?4+cp.h:0),(g,x,y)=>{g.drawImage(im.img,x+(w-dw)/2,y,dw,dh);cp.draw(g,x,y+dh+4)})}
+  case 'table':{const cols=b.cols,sz=b.small?Z.t*.94:Z.t,pad=b.compact?2.6:3.6,cw=cols.map(c=>c.w*w);
+    const xs=[];let acc=0;cw.forEach((c,i)=>{xs.push(acc);acc+=c});const colX=i=>rtl?w-xs[i]-cw[i]:xs[i];
+    const mkRow=(cells,head)=>{const boxes=cells.map((cell,i)=>textBox(ctx,cellRuns(cell),cw[i]-pad*2,{size:head?sz*.92:sz,fam:F.body,color:head?PAL.ink2:PAL.ink,b:head||!!(cell&&cell.b)},(cols[i].align)||'start'));
+      const h=Math.max(...boxes.map(x=>x.h))+pad*2;
+      return{h,draw:(g,x,y)=>{if(head)rr(g,x,y,w,h,2,PAL.panel2);boxes.forEach((bx,i)=>bx.draw(g,x+colX(i)+pad,y+pad));g.fillStyle=PAL.line2;g.fillRect(x,y+h-.6,w,.6)}}};
+    const hdr=b.noHead?null:mkRow(cols.map(c=>c.h||''),true);
+    const rows=b.rows.map(r=>mkRow(r,false));
+    const out=[];if(hdr)out.push({...hdr,isHdr:true});
+    rows.forEach((r,i)=>out.push({...r,hdr,h:r.h+(i===rows.length-1?gap:0)}));
+    if(!rows.length&&hdr)out[0].h+=gap;return out}
+  case 'ul':{const ind=11;return b.items.map((it,i)=>{const tb=textBox(ctx,it,w-ind,{size:b.size||Z.p,fam:F.body,color:PAL.ink});
+    return{h:tb.h+(i===b.items.length-1?gap:Z.gap*.35),draw:(g,x,y)=>{g.fillStyle=PAL.accent;g.beginPath();g.arc(rtl?x+w-3.2:x+3.2,y+(b.size||Z.p)*.7,1.7,0,7);g.fill();tb.draw(g,rtl?x:x+ind,y)}}})}
+  case 'callout':{const pad=7,tone=b.tone||'warn';const ti=b.title?textBox(ctx,[{text:b.title}],w-pad*2-4,{size:Z.p,fam:F.body,color:SCOL[tone],b:true}):{h:0,draw(){}};
+    const tx=textBox(ctx,[{text:b.text}],w-pad*2-4,{size:Z.p*.95,fam:F.body,color:PAL.ink});const h=pad+ti.h+(b.title?2:0)+tx.h+pad;
+    return one(h,(g,x,y)=>{rr(g,x,y,w,h,3,SSOFT[tone]);g.fillStyle=SCOL[tone];g.fillRect(rtl?x+w-3:x,y,3,h);ti.draw(g,x+pad+(rtl?0:4),y+pad);tx.draw(g,x+pad+(rtl?0:4),y+pad+ti.h+(b.title?2:0))})}
+  case 'cols':{const cg=14,tot=b.parts.reduce((q,p)=>q+p.w,0),avail=w-cg*(b.parts.length-1);
+    let off=0;const parts=b.parts.map(p=>{const pw=avail*p.w/tot;const ps=p.blocks.flatMap(bb=>pdfPieces(ctx,bb,pw,Z));const h=ps.reduce((q,x)=>q+x.h,0);const r={pw,ps,h,off};off+=pw+cg;return r});
+    const h=Math.max(...parts.map(p=>p.h));
+    return one(h,(g,x,y)=>parts.forEach(p=>{const px=rtl?x+w-p.off-p.pw:x+p.off;let yy=y;p.ps.forEach(pc=>{pc.draw(g,px,yy);yy+=pc.h})}),{})}
+  default:return[];
+  }
+}
+async function renderPdf(blocks,opt){
+  const K=2.5,M=opt.fit?28:40,foot=16,Z=opt.fit?{p:8.3,t:7.5,gap:5,h2:13,h3:10.2,title:17}:{p:9.6,t:8.2,gap:7,h2:15.5,h3:11.6,title:21};
+  const meas=document.createElement('canvas').getContext('2d');
+  const top=M,bottom=PG.H-M-foot,avail=bottom-top,fullW=PG.W-2*M;
+  const pages=[];
+  if(opt.fit){
+    let lw=fullW,ps,tot,sc=1;
+    for(let it=0;it<5;it++){ps=blocks.flatMap(b=>pdfPieces(meas,b,lw,Z));tot=ps.reduce((q,p)=>q+p.h,0);sc=Math.min(1,avail/tot);const next=fullW/sc;if(Math.abs(next-lw)<2)break;lw=next}
+    sc=Math.min(avail/tot,fullW/lw,1);
+    pages.push({scale:sc,lw,items:(()=>{let y=0;return ps.map(p=>{const r={p,y};y+=p.h;return r})})()});
+  }else{
+    const ps=blocks.flatMap(b=>b.t==='pagebreak'?[{brk:true}]:pdfPieces(meas,b,fullW,Z));
+    let cur={scale:1,lw:fullW,items:[]},y=0,lastHdr=null;pages.push(cur);
+    const newPage=()=>{cur={scale:1,lw:fullW,items:[]};pages.push(cur);y=0};
+    for(let i=0;i<ps.length;i++){const p=ps[i];
+      if(p.brk){if(cur.items.length)newPage();continue}
+      let need=p.h;if(p.keepNext){let j=i+1;while(j<ps.length&&ps[j].brk)j++;if(ps[j])need+=Math.min(ps[j].h,avail*.4)}
+      if(p.isHdr){const nx=ps[i+1];if(nx)need+=nx.h}
+      if(y+need>avail&&cur.items.length){newPage();if(p.hdr&&!p.isHdr){cur.items.push({p:p.hdr,y});y+=p.hdr.h}}
+      cur.items.push({p,y});y+=p.h;
+    }
+    if(!pages[pages.length-1].items.length)pages.pop();
+  }
+  const F=repFam(),rtl=lang==='ar',N=pages.length,country=repCountry(),jpgs=[];
+  for(let pi=0;pi<N;pi++){
+    const pg=pages[pi],cv=document.createElement('canvas');cv.width=Math.round(PG.W*K);cv.height=Math.round(PG.H*K);
+    const g=cv.getContext('2d');g.scale(K,K);g.fillStyle='#fff';g.fillRect(0,0,PG.W,PG.H);
+    g.save();
+    if(pg.scale!==1){const offX=M+(fullW-pg.lw*pg.scale)/2;g.translate(offX,top);g.scale(pg.scale,pg.scale);pg.items.forEach(({p,y})=>p.draw(g,0,y))}
+    else pg.items.forEach(({p,y})=>p.draw(g,M,top+y));
+    g.restore();
+    // footer
+    g.fillStyle=PAL.line;g.fillRect(M,PG.H-M-foot+6,fullW,.6);
+    const fl=textBox(g,[{text:`${t('title')} · ${country}`}],fullW*.7,{size:7,fam:F.body,color:PAL.ink3});
+    const fr=textBox(g,[{text:t('rep_page',{n:pi+1,m:N})}],fullW*.3,{size:7,fam:F.body,color:PAL.ink3},'end');
+    fl.draw(g,rtl?M+fullW*.3:M,PG.H-M-foot+9);fr.draw(g,rtl?M:M+fullW*.7,PG.H-M-foot+9);
+    jpgs.push({bytes:new Uint8Array(await (await new Promise(ok=>cv.toBlob(ok,'image/jpeg',.9))).arrayBuffer()),w:cv.width,h:cv.height});
+    cv.width=cv.height=1;
+  }
+  return pdfFromJpegs(jpgs,opt.title);
+}
+function pdfFromJpegs(jpgs,title){
+  const enc=new TextEncoder(),parts=[],offs=[];let len=0;
+  const push=x=>{const u=typeof x==='string'?enc.encode(x):x;parts.push(u);len+=u.length};
+  const hexStr=s=>'<FEFF'+Array.from(String(s)).map(ch=>{const cp=ch.codePointAt(0);if(cp>0xFFFF){const v=cp-0x10000;return((0xD800+(v>>10)).toString(16)+(0xDC00+(v&0x3FF)).toString(16)).padStart(8,'0')}return cp.toString(16).padStart(4,'0')}).join('').toUpperCase()+'>';
+  const obj=(id,...body)=>{offs[id]=len;push(`${id} 0 obj\n`);body.forEach(push);push('\nendobj\n')};
+  push('%PDF-1.4\n');push(new Uint8Array([37,226,227,207,211,10]));
+  const n=jpgs.length,d=new Date(),pad=x=>String(x).padStart(2,'0');
+  obj(1,'<< /Type /Catalog /Pages 2 0 R >>');
+  obj(2,`<< /Type /Pages /Kids [${jpgs.map((_,i)=>`${4+3*i} 0 R`).join(' ')}] /Count ${n} >>`);
+  obj(3,`<< /Title ${hexStr(title)} /Creator ${hexStr('National Vitality Observatory')} /CreationDate (D:${d.getUTCFullYear()}${pad(d.getUTCMonth()+1)}${pad(d.getUTCDate())}${pad(d.getUTCHours())}${pad(d.getUTCMinutes())}${pad(d.getUTCSeconds())}Z) >>`);
+  jpgs.forEach((j,i)=>{
+    obj(4+3*i,`<< /Type /Page /Parent 2 0 R /MediaBox [0 0 ${PG.W} ${PG.H}] /Resources << /XObject << /Im0 ${6+3*i} 0 R >> >> /Contents ${5+3*i} 0 R >>`);
+    const cs=`q\n${PG.W} 0 0 ${PG.H} 0 0 cm\n/Im0 Do\nQ\n`;
+    obj(5+3*i,`<< /Length ${cs.length} >>\nstream\n${cs}endstream`);
+    obj(6+3*i,`<< /Type /XObject /Subtype /Image /Width ${j.w} /Height ${j.h} /ColorSpace /DeviceRGB /BitsPerComponent 8 /Filter /DCTDecode /Length ${j.bytes.length} >>\nstream\n`,j.bytes,'\nendstream');
+  });
+  const size=4+3*n,xref=len;
+  push(`xref\n0 ${size}\n0000000000 65535 f \n`+Array.from({length:size-1},(_,k)=>String(offs[k+1]).padStart(10,'0')+' 00000 n \n').join(''));
+  push(`trailer\n<< /Size ${size} /Root 1 0 R /Info 3 0 R >>\nstartxref\n${xref}\n%%EOF\n`);
+  return new Blob(parts,{type:'application/pdf'});
+}
+
+/* ---------- DOCX (hand-written OOXML + stored ZIP) ---------- */
+const CRC_T=(()=>{const tb=new Uint32Array(256);for(let n=0;n<256;n++){let c=n;for(let k=0;k<8;k++)c=c&1?0xEDB88320^(c>>>1):c>>>1;tb[n]=c>>>0}return tb})();
+const crc32=u8=>{let c=0xFFFFFFFF;for(let i=0;i<u8.length;i++)c=CRC_T[(c^u8[i])&255]^(c>>>8);return(c^0xFFFFFFFF)>>>0};
+function zipStore(files,type){
+  const enc=new TextEncoder(),out=[],central=[];let off=0;
+  for(const f of files){const nm=enc.encode(f.name),data=typeof f.data==='string'?enc.encode(f.data):f.data,crc=crc32(data);
+    const h=new DataView(new ArrayBuffer(30));h.setUint32(0,0x04034b50,true);h.setUint16(4,20,true);h.setUint16(6,0x0800,true);h.setUint16(8,0,true);h.setUint16(10,0,true);h.setUint16(12,0x21,true);h.setUint32(14,crc,true);h.setUint32(18,data.length,true);h.setUint32(22,data.length,true);h.setUint16(26,nm.length,true);h.setUint16(28,0,true);
+    out.push(new Uint8Array(h.buffer),nm,data);
+    const c=new DataView(new ArrayBuffer(46));c.setUint32(0,0x02014b50,true);c.setUint16(4,20,true);c.setUint16(6,20,true);c.setUint16(8,0x0800,true);c.setUint16(10,0,true);c.setUint16(12,0,true);c.setUint16(14,0x21,true);c.setUint32(16,crc,true);c.setUint32(20,data.length,true);c.setUint32(24,data.length,true);c.setUint16(28,nm.length,true);c.setUint32(42,off,true);
+    central.push(new Uint8Array(c.buffer),nm);off+=30+nm.length+data.length}
+  const cd=central.reduce((q,x)=>q+x.length,0),e=new DataView(new ArrayBuffer(22));
+  e.setUint32(0,0x06054b50,true);e.setUint16(8,files.length,true);e.setUint16(10,files.length,true);e.setUint32(12,cd,true);e.setUint32(16,off,true);
+  return new Blob([...out,...central,new Uint8Array(e.buffer)],{type});
+}
+function renderDocx(blocks,opt){
+  const rtl=lang==='ar',media=[];let pid=1;
+  const margin=opt.fit?680:1080,pageW=11906,textW=pageW-2*margin;
+  const Z=opt.fit?{p:15,t:13,gap:36}:{p:19,t:16,gap:100};
+  const FONT=rtl?'Arial':'Calibri',DISP=rtl?'Arial':'Calibri';
+  const X=s=>String(s??'').replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F]/g,'').replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  const hex=c=>(c||'').replace('#','').toUpperCase();
+  const AR=/[֐-ࣿיִ-ﻼ]/;
+  const run=(r,base)=>{const sz=r.size?Math.round(r.size*2):base.sz,col=r.color||base.color,b=r.b??base.b,txt=String(r.text??'');
+    return `<w:r><w:rPr><w:rFonts w:ascii="${base.font||FONT}" w:hAnsi="${base.font||FONT}" w:cs="${base.font||FONT}"/>${b?'<w:b/><w:bCs/>':''}${col?`<w:color w:val="${hex(col)}"/>`:''}${sz?`<w:sz w:val="${sz}"/><w:szCs w:val="${sz}"/>`:''}${rtl&&AR.test(txt)?'<w:rtl/>':''}</w:rPr><w:t xml:space="preserve">${X(txt)}</w:t></w:r>`};
+  const para=(inner,o={})=>`<w:p><w:pPr>${o.style?`<w:pStyle w:val="${o.style}"/>`:''}${o.keepNext?'<w:keepNext/>':''}${o.num?'<w:numPr><w:ilvl w:val="0"/><w:numId w:val="1"/></w:numPr>':''}${o.border?`<w:pBdr><w:bottom w:val="single" w:sz="12" w:space="4" w:color="${hex(o.border)}"/></w:pBdr>`:''}${rtl?'<w:bidi/>':''}<w:spacing w:before="${o.before||0}" w:after="${o.after??Z.gap}"${o.line?` w:line="${o.line}" w:lineRule="auto"`:''}/>${o.jc?`<w:jc w:val="${o.jc}"/>`:''}</w:pPr>${inner}</w:p>`;
+  const runsXml=(runs,base)=>runs.map(r=>run(r,base)).join('');
+  const jcOf=a=>a==='center'?'center':a==='end'?'right':null;
+  const imgRun=(im,wTw,maxHpt)=>{let cx=Math.round(wTw*635),cy=Math.round(cx*im.h/im.w);if(maxHpt){const mh=Math.round(maxHpt*20*635);if(cy>mh){cx=Math.round(cx*mh/cy);cy=mh}}
+    const id=media.length+1,n=pid++;media.push({name:`image${id}.png`,url:im.url});
+    return `<w:r><w:drawing><wp:inline distT="0" distB="0" distL="0" distR="0"><wp:extent cx="${cx}" cy="${cy}"/><wp:effectExtent l="0" t="0" r="0" b="0"/><wp:docPr id="${n}" name="Chart ${n}"/><wp:cNvGraphicFramePr><a:graphicFrameLocks xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main" noChangeAspect="1"/></wp:cNvGraphicFramePr><a:graphic xmlns:a="http://schemas.openxmlformats.org/drawingml/2006/main"><a:graphicData uri="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:pic xmlns:pic="http://schemas.openxmlformats.org/drawingml/2006/picture"><pic:nvPicPr><pic:cNvPr id="${n}" name="image${id}.png"/><pic:cNvPicPr/></pic:nvPicPr><pic:blipFill><a:blip r:embed="rIdImg${id}"/><a:stretch><a:fillRect/></a:stretch></pic:blipFill><pic:spPr><a:xfrm><a:off x="0" y="0"/><a:ext cx="${cx}" cy="${cy}"/></a:xfrm><a:prstGeom prst="rect"><a:avLst/></a:prstGeom></pic:spPr></pic:pic></a:graphicData></a:graphic></wp:inline></w:drawing></w:r>`};
+  const border=(side,val,sz,col)=>`<w:${side} w:val="${val}" w:sz="${sz||4}" w:space="0" w:color="${hex(col)||'auto'}"/>`;
+  const tbl=(widths,rows,o={})=>{const tot=widths.reduce((q,x)=>q+x,0);
+    const bd=o.borders||`${border('top','nil')}${border('left','nil')}${border('bottom','nil')}${border('right','nil')}${border('insideH','nil')}${border('insideV','nil')}`;
+    return `<w:tbl><w:tblPr>${rtl?'<w:bidiVisual/>':''}<w:tblW w:w="${tot}" w:type="dxa"/><w:tblBorders>${bd}</w:tblBorders><w:tblLayout w:type="fixed"/><w:tblCellMar><w:top w:w="${o.padV??30}" w:type="dxa"/><w:left w:w="${o.padH??80}" w:type="dxa"/><w:bottom w:w="${o.padV??30}" w:type="dxa"/><w:right w:w="${o.padH??80}" w:type="dxa"/></w:tblCellMar></w:tblPr><w:tblGrid>${widths.map(x=>`<w:gridCol w:w="${x}"/>`).join('')}</w:tblGrid>${rows}</w:tbl>`};
+  const tc=(w,inner,o={})=>`<w:tc><w:tcPr><w:tcW w:w="${w}" w:type="dxa"/>${o.borders?`<w:tcBorders>${o.borders}</w:tcBorders>`:''}${o.fill?`<w:shd w:val="clear" w:color="auto" w:fill="${hex(o.fill)}"/>`:''}${o.vAlign?`<w:vAlign w:val="${o.vAlign}"/>`:''}</w:tcPr>${inner||para('',{after:0})}</w:tc>`;
+  const tr=(cells,head)=>`<w:tr><w:trPr><w:cantSplit/>${head?'<w:tblHeader/>':''}</w:trPr>${cells}</w:tr>`;
+  const endsWithTable=x=>/<\/w:tbl>\s*$/.test(x);
+  function bx(b,W){
+    switch(b.t){
+    case 'p':return para(runsXml(b.runs,{sz:b.size?Math.round(b.size*2):Z.p,color:b.color||PAL.ink,b:b.b}),{after:b.after!=null?b.after*20:Z.gap,jc:jcOf(b.align)});
+    case 'h2':return para(runsXml([{text:b.text}],{}),{style:'Heading1'});
+    case 'h3':return para(runsXml([{text:b.text}],{}),{style:'Heading2'});
+    case 'title':return para(runsXml([{text:b.eyebrow}],{sz:Math.round(Z.p*.85),color:PAL.accent,b:true}),{after:40})+para(runsXml([{text:b.title}],{}),{style:'Title'})+para(runsXml([{text:b.meta}],{sz:Math.round(Z.p*.82),color:PAL.ink3}),{after:160,border:PAL.accent});
+    case 'tiles':{const n=b.items.length,gw=Math.floor(W/n);
+      const cells=b.items.map(it=>tc(gw,para(runsXml([{text:it.label}],{sz:Math.round(Z.p*.78),color:PAL.ink3}),{after:0})+para(runsXml(rtl?[{text:it.value+(it.unit||''),b:true,color:it.color}]:[{text:it.value,b:true,color:it.color},{text:it.unit?' '+it.unit:'',color:PAL.ink3,size:Z.p*.45}],{sz:Math.round(Z.p*2),font:DISP}),{after:0})+para(runsXml([{text:it.sub||''}],{sz:Math.round(Z.p*.78),color:it.color===PAL.ink?PAL.ink2:it.color}),{after:0}),{fill:PAL.panel2,borders:`${border('top','single',24,'FFFFFF')}${border('left','single',24,'FFFFFF')}${border('bottom','single',24,'FFFFFF')}${border('right','single',24,'FFFFFF')}`})).join('');
+      return tbl(Array(n).fill(gw),tr(cells),{padV:80,padH:120})+para('',{after:Z.gap})}
+    case 'img':{const wTw=Math.round(W*(b.width||1));return para(imgRun(b.im,wTw,b.maxH&&opt.fit?b.maxH*.74:b.maxH),{jc:'center',after:b.cap?30:Z.gap})+(b.cap?para(runsXml([{text:b.cap}],{sz:Math.round(Z.p*.76),color:PAL.ink3}),{after:Z.gap+40}):'')}
+    case 'table':{const ws=b.cols.map(c=>Math.floor(c.w*W)),sz=b.small?Math.round(Z.t*.94):Z.t;
+      const cellXml=(cell,i,head)=>tc(ws[i],para(runsXml(cellRuns(cell),{sz:head?Math.round(sz*.92):sz,color:head?PAL.ink2:PAL.ink,b:head||!!(cell&&cell.b)}),{after:0,jc:jcOf(b.cols[i].align)}),{fill:head?PAL.panel2:null});
+      const rows=(b.noHead?'':tr(b.cols.map((c,i)=>cellXml(c.h||'',i,true)).join(''),true))+b.rows.map(r=>tr(r.map((c,i)=>cellXml(c,i,false)).join(''))).join('');
+      return tbl(ws,rows,{padV:b.compact?20:36,borders:`${border('top','nil')}${border('left','nil')}${border('bottom','single',4,PAL.line)}${border('right','nil')}${border('insideH','single',4,PAL.line2)}${border('insideV','nil')}`})+para('',{after:Z.gap})}
+    case 'ul':return b.items.map((it,i)=>para(runsXml(it,{sz:b.size?Math.round(b.size*2):Z.p,color:PAL.ink}),{num:true,after:i===b.items.length-1?Z.gap:30})).join('');
+    case 'callout':{const tone=b.tone||'warn';const inner=(b.title?para(runsXml([{text:b.title}],{sz:Z.p,color:SCOL[tone],b:true}),{after:20}):'')+para(runsXml([{text:b.text}],{sz:Z.p,color:PAL.ink}),{after:0});
+      const bd=`${border('top','single',6,SCOL[tone])}${border('left','single',6,SCOL[tone])}${border('bottom','single',6,SCOL[tone])}${border('right','single',6,SCOL[tone])}`;
+      return tbl([W],tr(tc(W,inner,{fill:SSOFT[tone],borders:bd})),{padV:80,padH:140})+para('',{after:Z.gap})}
+    case 'cols':{const cg=240,tot=b.parts.reduce((q,p)=>q+p.w,0),avail=W-cg*(b.parts.length-1)-b.parts.length*160;
+      const ws=b.parts.map(p=>Math.floor(avail*p.w/tot));
+      const cells=b.parts.map((p,i)=>{let inner=p.blocks.map(bb=>bx(bb,ws[i])).join('');if(!inner||endsWithTable(inner))inner+=para('',{after:0});return tc(ws[i]+160+(i<b.parts.length-1?cg:0),inner,{vAlign:'top'})}).join('');
+      return tbl(ws.map((x,i)=>x+160+(i<b.parts.length-1?cg:0)),tr(cells),{padV:0,padH:0})+para('',{after:40})}
+    case 'pagebreak':return '<w:p><w:r><w:br w:type="page"/></w:r></w:p>';
+    default:return '';
+    }
+  }
+  const body=blocks.map(b=>bx(b,textW)).join('');
+  const NS='xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships" xmlns:wp="http://schemas.openxmlformats.org/drawingml/2006/wordprocessingDrawing"';
+  const doc=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:document ${NS}><w:body>${body}<w:sectPr><w:footerReference w:type="default" r:id="rIdFooter"/><w:pgSz w:w="11906" w:h="16838"/><w:pgMar w:top="${margin}" w:right="${margin}" w:bottom="${margin}" w:left="${margin}" w:header="420" w:footer="420" w:gutter="0"/>${rtl?'<w:bidi/>':''}</w:sectPr></w:body></w:document>`;
+  const sz=v=>`<w:sz w:val="${v}"/><w:szCs w:val="${v}"/>`;
+  const styles=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:styles xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:docDefaults><w:rPrDefault><w:rPr><w:rFonts w:ascii="${FONT}" w:hAnsi="${FONT}" w:eastAsia="${FONT}" w:cs="${FONT}"/>${sz(Z.p)}<w:lang w:val="${rtl?'ar-SA':'en-GB'}" w:bidi="ar-SA"/></w:rPr></w:rPrDefault><w:pPrDefault><w:pPr><w:spacing w:after="${Z.gap}" w:line="264" w:lineRule="auto"/></w:pPr></w:pPrDefault></w:docDefaults>
+<w:style w:type="paragraph" w:default="1" w:styleId="Normal"><w:name w:val="Normal"/><w:qFormat/></w:style>
+<w:style w:type="paragraph" w:styleId="Title"><w:name w:val="Title"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:spacing w:after="60"/></w:pPr><w:rPr><w:rFonts w:ascii="${DISP}" w:hAnsi="${DISP}" w:cs="${DISP}"/><w:b/><w:bCs/><w:color w:val="${hex(PAL.ink)}"/>${sz(opt.fit?32:40)}</w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading1"><w:name w:val="heading 1"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:keepLines/><w:pBdr><w:bottom w:val="single" w:sz="4" w:space="2" w:color="${hex(PAL.line)}"/></w:pBdr><w:spacing w:before="${opt.fit?120:280}" w:after="${opt.fit?60:120}"/><w:outlineLvl w:val="0"/></w:pPr><w:rPr><w:rFonts w:ascii="${DISP}" w:hAnsi="${DISP}" w:cs="${DISP}"/><w:b/><w:bCs/><w:color w:val="${hex(PAL.accent)}"/>${sz(opt.fit?24:30)}</w:rPr></w:style>
+<w:style w:type="paragraph" w:styleId="Heading2"><w:name w:val="heading 2"/><w:basedOn w:val="Normal"/><w:next w:val="Normal"/><w:qFormat/><w:pPr><w:keepNext/><w:keepLines/><w:spacing w:before="${opt.fit?80:200}" w:after="${opt.fit?40:80}"/><w:outlineLvl w:val="1"/></w:pPr><w:rPr><w:rFonts w:ascii="${DISP}" w:hAnsi="${DISP}" w:cs="${DISP}"/><w:b/><w:bCs/><w:color w:val="${hex(PAL.ink)}"/>${sz(opt.fit?19:23)}</w:rPr></w:style>
+<w:style w:type="table" w:default="1" w:styleId="TableNormal"><w:name w:val="Normal Table"/><w:uiPriority w:val="99"/><w:semiHidden/><w:tblPr><w:tblInd w:w="0" w:type="dxa"/><w:tblCellMar><w:top w:w="0" w:type="dxa"/><w:left w:w="108" w:type="dxa"/><w:bottom w:w="0" w:type="dxa"/><w:right w:w="108" w:type="dxa"/></w:tblCellMar></w:tblPr></w:style>
+</w:styles>`;
+  const numbering=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:numbering xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:abstractNum w:abstractNumId="0"><w:multiLevelType w:val="hybridMultilevel"/><w:lvl w:ilvl="0"><w:start w:val="1"/><w:numFmt w:val="bullet"/><w:lvlText w:val="•"/><w:lvlJc w:val="left"/><w:pPr><w:ind w:left="300" w:hanging="220"/></w:pPr><w:rPr><w:rFonts w:ascii="Arial" w:hAnsi="Arial" w:cs="Arial"/><w:color w:val="${hex(PAL.accent)}"/></w:rPr></w:lvl></w:abstractNum><w:num w:numId="1"><w:abstractNumId w:val="0"/></w:num></w:numbering>`;
+  const fld=instr=>`<w:r><w:fldChar w:fldCharType="begin"/></w:r><w:r><w:instrText xml:space="preserve"> ${instr} </w:instrText></w:r><w:r><w:fldChar w:fldCharType="separate"/></w:r><w:r><w:t>1</w:t></w:r><w:r><w:fldChar w:fldCharType="end"/></w:r>`;
+  const fbase={sz:14,color:PAL.ink3};
+  const footer=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:ftr ${NS}>${para(runsXml([{text:`${t('title')} · ${repCountry()} · `}],fbase)+fld('PAGE')+runsXml([{text:' / '}],fbase)+fld('NUMPAGES'),{after:0,jc:'center'})}</w:ftr>`;
+  const settings=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<w:settings xmlns:w="http://schemas.openxmlformats.org/wordprocessingml/2006/main"><w:defaultTabStop w:val="720"/><w:characterSpacingControl w:val="doNotCompress"/><w:compat><w:compatSetting w:name="compatibilityMode" w:uri="http://schemas.microsoft.com/office/word" w:val="15"/></w:compat></w:settings>`;
+  const now=new Date().toISOString().replace(/\.\d+Z$/,'Z');
+  const core=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<cp:coreProperties xmlns:cp="http://schemas.openxmlformats.org/package/2006/metadata/core-properties" xmlns:dc="http://purl.org/dc/elements/1.1/" xmlns:dcterms="http://purl.org/dc/terms/" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"><dc:title>${X(opt.title)}</dc:title><dc:creator>National Vitality Observatory</dc:creator><dcterms:created xsi:type="dcterms:W3CDTF">${now}</dcterms:created><dcterms:modified xsi:type="dcterms:W3CDTF">${now}</dcterms:modified></cp:coreProperties>`;
+  const app=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Properties xmlns="http://schemas.openxmlformats.org/officeDocument/2006/extended-properties"><Application>National Vitality Observatory</Application></Properties>`;
+  const ct=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types"><Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/><Default Extension="xml" ContentType="application/xml"/><Default Extension="png" ContentType="image/png"/><Override PartName="/word/document.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.document.main+xml"/><Override PartName="/word/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.styles+xml"/><Override PartName="/word/numbering.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.numbering+xml"/><Override PartName="/word/settings.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.settings+xml"/><Override PartName="/word/footer1.xml" ContentType="application/vnd.openxmlformats-officedocument.wordprocessingml.footer+xml"/><Override PartName="/docProps/core.xml" ContentType="application/vnd.openxmlformats-package.core-properties+xml"/><Override PartName="/docProps/app.xml" ContentType="application/vnd.openxmlformats-officedocument.extended-properties+xml"/></Types>`;
+  const rels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships"><Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/officeDocument" Target="word/document.xml"/><Relationship Id="rId2" Type="http://schemas.openxmlformats.org/package/2006/relationships/metadata/core-properties" Target="docProps/core.xml"/><Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/extended-properties" Target="docProps/app.xml"/></Relationships>`;
+  const R_=(id,type,target)=>`<Relationship Id="${id}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/${type}" Target="${target}"/>`;
+  const docRels=`<?xml version="1.0" encoding="UTF-8" standalone="yes"?>\n<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">${R_('rIdStyles','styles','styles.xml')}${R_('rIdNum','numbering','numbering.xml')}${R_('rIdSettings','settings','settings.xml')}${R_('rIdFooter','footer','footer1.xml')}${media.map((m,i)=>R_('rIdImg'+(i+1),'image','media/'+m.name)).join('')}</Relationships>`;
+  const b64=u=>{const s=atob(u.split(',')[1]);const a=new Uint8Array(s.length);for(let i=0;i<s.length;i++)a[i]=s.charCodeAt(i);return a};
+  return zipStore([{name:'[Content_Types].xml',data:ct},{name:'_rels/.rels',data:rels},{name:'docProps/core.xml',data:core},{name:'docProps/app.xml',data:app},{name:'word/document.xml',data:doc},{name:'word/styles.xml',data:styles},{name:'word/numbering.xml',data:numbering},{name:'word/settings.xml',data:settings},{name:'word/footer1.xml',data:footer},{name:'word/_rels/document.xml.rels',data:docRels},...media.map(m=>({name:'word/media/'+m.name,data:b64(m.url)}))],'application/vnd.openxmlformats-officedocument.wordprocessingml.document');
+}
+
+/* ---------- orchestration + dialog ---------- */
+function saveBlob(blob,name){const url=URL.createObjectURL(blob);const a=document.createElement('a');a.href=url;a.download=name;document.body.appendChild(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),4000)}
+async function makeReport({kind,fmt,lng},onMsg=()=>{}){
+  const prevLang=lang,wasPlaying=!!timer;
+  if(wasPlaying)setPlaying(false);
+  if(lng&&lng!==lang)setLang(lng);
+  try{
+    onMsg(t('rep_prep'));
+    try{await document.fonts?.ready}catch(e){}
+    const im={};
+    if(kind==='summary')im.org=await captureOrganism(orgView);
+    else{im.orgRing=await captureOrganism('ring');im.orgBody=await captureOrganism('body')}
+    im.vitals=await pngFromSvgString(...chartVitals(kind==='summary'?540:720));
+    RPT.wide=true;renderTrend();
+    try{im.trend=await pngFromSvgEl($('#trend svg'),2.2)}finally{RPT.wide=false;renderTrend()}
+    if(kind!=='summary'){
+      im.radar=await pngFromSvgEl($('#score .radar svg'),2.4);
+      im.ledger=await pngFromSvgString(...chartLedger());
+      im.hist={};for(const v of VS)im.hist[v.id]=await pngFromSvgString(...chartHist(v.id));
+    }
+    const blocks=kind==='summary'?buildSummary(im):buildDetailed(im);
+    const title=`${t(PROFILE==='gov'?'rep_titleGov':'rep_titleNation')} — ${repCountry()}`;
+    onMsg(t('rep_building',{fmt:fmt==='pdf'?'PDF':'Word'}));
+    await new Promise(r=>setTimeout(r,30));
+    const blob=fmt==='pdf'?await renderPdf(blocks,{fit:kind==='summary',title}):renderDocx(blocks,{fit:kind==='summary',title});
+    const k=S.baseKey+S.t,ym=`${Math.floor(k/12)}-${String(k%12+1).padStart(2,'0')}`;
+    const who=(youIso()||(S.real?'country':'Meridia')).replace(/[^\w-]+/g,'');
+    const name=`NVO_${who}_${PROFILE==='gov'?'government':'nation'}_${kind}_${ym}.${fmt}`;
+    return{blob,name};
+  }finally{
+    if(lang!==prevLang)setLang(prevLang);
+    if(wasPlaying)setPlaying(true);
+  }
+}
+(function wireReportDialog(){
+  const dlg=$('#repDlg');if(!dlg)return;
+  const msg=$('#repMsg'),go=$('#repGo');
+  const open=()=>{$('#repLang').value=lang;$('#repSub').textContent=t('rep_dlgSub',{tab:t(PROFILE==='gov'?'tabGov':'tabNation')});msg.textContent='';msg.className='rep-msg';go.disabled=false;
+    if(dlg.showModal)dlg.showModal();else dlg.setAttribute('open','')};
+  $('#exportReport')?.addEventListener('click',open);
+  $('#repCancel').addEventListener('click',()=>{if(!RPT.busy)dlg.close?dlg.close():dlg.removeAttribute('open')});
+  dlg.addEventListener('cancel',e=>{if(RPT.busy)e.preventDefault()});
+  $('#repForm').addEventListener('submit',async e=>{
+    e.preventDefault();if(RPT.busy||!S?.cur)return;
+    const fd=new FormData($('#repForm'));const opts={kind:fd.get('kind')||'summary',fmt:fd.get('fmt')||'pdf',lng:$('#repLang').value};
+    RPT.busy=true;go.disabled=true;msg.className='rep-msg';
+    try{const {blob,name}=await makeReport(opts,m=>{msg.textContent=m});saveBlob(blob,name);msg.textContent=t('rep_done',{name});msg.className='rep-msg ok'}
+    catch(err){console.error(err);msg.textContent=t('rep_err',{err:String(err?.message||err).slice(0,140)});msg.className='rep-msg err'}
+    finally{RPT.busy=false;go.disabled=false}
+  });
+})();
+
 /* ================= WIRING ================= */
 let timer=null,lastLoad=null,lastOnline=null,lastFiles=null,srcMode='online',onlineMsg='',wbBusy=false,wbToken=0;
 let wbPick='JOR';try{const v=localStorage.getItem('nvo.wbCountry');if(v&&GEO[v])wbPick=v}catch(e){}
@@ -2709,7 +3365,7 @@ $('#tabs').addEventListener('keydown',e=>{if(e.key!=='ArrowLeft'&&e.key!=='Arrow
 applyProfile(PROFILES[PROFILE]);
 renderStatic();buildOrganism();loadSynth(SCENARIOS[0].id);loadOnline(wbPick);
 (async()=>{try{if(!('showDirectoryPicker' in window))return;const h=await idbGet('dir');if(h&&h.name){const b=$('#reconnect');b._handle=h;b.hidden=false;b.textContent=t('reconnect',{name:h.name})}}catch(e){}})();
-window.__nvo={get S(){return S},ADV,computeBenchmark,buildPrompt,briefMarkdown,runBenchmark,switchTab,get PROFILE(){return PROFILE},get KPIS(){return KPIS},get SHOCKS(){return SHOCKS},get SCENARIOS_(){return SCENARIOS},eng:{newSynthState,step,updateLedger,evaluate,applyShockRaw:applyShock},wbToFiles,loadOnline,applyShock:(id,sev)=>{applyShock(S,id,sev);renderAll()},step:()=>{step(S,true,true)},newSynthState,project,buildModel,get BUILTIN_KPIS(){return BUILTIN_KPIS},get BUILTIN_LINKS(){return BUILTIN_LINKS},get SCENARIOS(){return SCENARIOS},loadReal,sampleFiles:()=>withBuiltin(sampleFiles),catalogCSV,linksCSV,observationsCSV,countryJSON,setLang,setMode,processFiles};
+window.__nvo={_rep:{wrapRuns,drawLine,makeReport,textBox},get S(){return S},ADV,computeBenchmark,buildPrompt,briefMarkdown,runBenchmark,switchTab,get PROFILE(){return PROFILE},get KPIS(){return KPIS},get SHOCKS(){return SHOCKS},get SCENARIOS_(){return SCENARIOS},eng:{newSynthState,step,updateLedger,evaluate,applyShockRaw:applyShock},wbToFiles,loadOnline,applyShock:(id,sev)=>{applyShock(S,id,sev);renderAll()},step:()=>{step(S,true,true)},newSynthState,project,buildModel,get BUILTIN_KPIS(){return BUILTIN_KPIS},get BUILTIN_LINKS(){return BUILTIN_LINKS},get SCENARIOS(){return SCENARIOS},loadReal,sampleFiles:()=>withBuiltin(sampleFiles),catalogCSV,linksCSV,observationsCSV,countryJSON,setLang,setMode,processFiles};
 })();
 </script>
 </body>

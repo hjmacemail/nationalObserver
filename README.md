@@ -37,6 +37,17 @@ The whole platform is mobile-friendly: login, settings and the observatory itsel
 
 It opens full-screen with its own icon. It still needs an internet connection for sign-in, World Bank data and AI.
 
+## Status reports (PDF / Word)
+
+**Export report** (in the header controls, both tabs) creates a report on the country's or government's current status:
+
+- **One-page summary:** headline scores, the organism, vital signs chart, diagnosis and key facts, early warnings, priority actions, trend chart.
+- **Detailed report** (about 10 pages): everything above plus both organism views (ring and human body), resilience properties radar, every system with its 36-month chart and KPI table, the regeneration ledger chart, the trend and case log, stress-test results, active interventions, improvement levers, and the method.
+  - Peer comparisons and AI plans are included if you loaded or generated them in the advisor first.
+- **Formats:** PDF, or Word (.docx), which stays editable. The report can be in English or Arabic (right-to-left).
+
+Everything is generated in the browser. Nothing is sent to the server, and it also works in the standalone HTML file. The PDF pages are high-resolution images, so the PDF text can't be selected. Use Word if you need to copy or edit text.
+
 ## Deploy on Railway
 
 1. **Put this folder in a GitHub repo** (Railway deploys from GitHub):
